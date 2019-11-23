@@ -9,12 +9,14 @@ import androidx.annotation.Nullable;
 
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.controller.Controller;
+import com.github.adamantcheese.chan.core.manager.ReplyManager;
 import com.github.adamantcheese.chan.core.model.orm.Loadable;
 import com.github.adamantcheese.chan.core.presenter.ImageReencodingPresenter;
 import com.github.adamantcheese.chan.core.settings.ChanSettings;
 import com.github.adamantcheese.chan.core.site.http.Reply;
 import com.github.adamantcheese.chan.ui.controller.ImageOptionsController;
 import com.github.adamantcheese.chan.ui.controller.ImageReencodeOptionsController;
+import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 import com.google.gson.Gson;
 
 public class ImageOptionsHelper implements
@@ -24,22 +26,47 @@ public class ImageOptionsHelper implements
     private ImageOptionsController imageOptionsController = null;
     private ImageReencodeOptionsController imageReencodeOptionsController = null;
     private final ImageReencodingHelperCallback callbacks;
+    private final ReplyManager replyManager;
+    private final Gson gson;
+    private final ThemeHelper themeHelper;
 
     private ImageReencodingPresenter.ImageOptions lastImageOptions;
 
-    public ImageOptionsHelper(Context context, ImageReencodingHelperCallback callbacks) {
+    public ImageOptionsHelper(
+            Context context,
+            ReplyManager replyManager,
+            Gson gson,
+            ThemeHelper themeHelper,
+            ImageReencodingHelperCallback callbacks
+    ) {
         this.context = context;
+        this.replyManager = replyManager;
+        this.gson = gson;
+        this.themeHelper = themeHelper;
         this.callbacks = callbacks;
     }
 
     public void showController(Loadable loadable, boolean supportsReencode) {
         if (imageOptionsController == null) {
             try { //load up the last image options every time this controller is created
-                lastImageOptions = new Gson().fromJson(ChanSettings.lastImageOptions.get(), ImageReencodingPresenter.ImageOptions.class);
+                lastImageOptions = gson.fromJson(
+                        ChanSettings.lastImageOptions.get(),
+                        ImageReencodingPresenter.ImageOptions.class
+                );
             } catch (Exception ignored) {
                 lastImageOptions = null;
             }
-            imageOptionsController = new ImageOptionsController(context, this, this, loadable, lastImageOptions, supportsReencode);
+
+            imageOptionsController = new ImageOptionsController(
+                    context,
+                    replyManager,
+                    this,
+                    this,
+                    loadable,
+                    lastImageOptions,
+                    supportsReencode
+            );
+
             callbacks.presentReencodeOptionsController(imageOptionsController);
         }
     }
@@ -61,8 +88,20 @@ public class ImageOptionsHelper implements
     @Override
     public void onReencodeOptionClicked(@Nullable Bitmap.CompressFormat imageFormat, @Nullable Pair<Integer, Integer> dims) {
         if (imageReencodeOptionsController == null && imageFormat != null && dims != null) {
-            imageReencodeOptionsController = new ImageReencodeOptionsController(context, this, this, imageFormat,
-                    dims, lastImageOptions != null ? lastImageOptions.getReencodeSettings() : null);
+            ImageReencodingPresenter.ReencodeSettings lastOptions = lastImageOptions != null
+                    ? lastImageOptions.getReencodeSettings()
+                    : null;
+
+            imageReencodeOptionsController = new ImageReencodeOptionsController(
+                    context,
+                    this,
+                    this,
+                    imageFormat,
+                    dims,
+                    lastOptions,
+                    themeHelper
+            );
+
             callbacks.presentReencodeOptionsController(imageReencodeOptionsController);
         } else {
             Toast.makeText(context, context.getString(R.string.image_reencode_format_error), Toast.LENGTH_LONG).show();

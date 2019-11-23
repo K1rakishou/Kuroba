@@ -46,7 +46,7 @@ public class PostAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final PostAdapterCallback postAdapterCallback;
     private final PostCellInterface.PostCellCallback postCellCallback;
     private RecyclerView recyclerView;
-
+    private final ThemeHelper themeHelper;
     private final ThreadStatusCell.Callback statusCellCallback;
     private final List<Post> displayList = new ArrayList<>();
 
@@ -62,7 +62,14 @@ public class PostAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private ChanSettings.PostViewMode postViewMode;
     private boolean compact = false;
 
-    public PostAdapter(RecyclerView recyclerView, PostAdapterCallback postAdapterCallback, PostCellInterface.PostCellCallback postCellCallback, ThreadStatusCell.Callback statusCellCallback) {
+    public PostAdapter(
+            ThemeHelper themeHelper,
+            RecyclerView recyclerView,
+            PostAdapterCallback postAdapterCallback,
+            PostCellInterface.PostCellCallback postCellCallback,
+            ThreadStatusCell.Callback statusCellCallback
+    ) {
+        this.themeHelper = themeHelper;
         this.recyclerView = recyclerView;
         this.postAdapterCallback = postAdapterCallback;
         this.postCellCallback = postCellCallback;
@@ -126,7 +133,7 @@ public class PostAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         true,
                         postViewMode,
                         compact,
-                        ThemeHelper.getTheme());
+                        themeHelper.getTheme());
 
                 if (itemViewType == TYPE_POST_STUB) {
                     holder.itemView.setOnClickListener(v -> postAdapterCallback.onUnhidePostClick(post));

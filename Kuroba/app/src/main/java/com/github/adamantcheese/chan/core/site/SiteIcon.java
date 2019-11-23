@@ -28,7 +28,6 @@ import com.github.adamantcheese.chan.utils.Logger;
 
 import okhttp3.HttpUrl;
 
-import static com.github.adamantcheese.chan.Chan.injector;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAppContext;
 
 public class SiteIcon {
@@ -37,16 +36,19 @@ public class SiteIcon {
 
     private HttpUrl url;
     private Drawable drawable;
+    private ImageLoaderV2 imageLoaderV2;
 
-    public static SiteIcon fromFavicon(HttpUrl url) {
+    public static SiteIcon fromFavicon(ImageLoaderV2 imageLoaderV2, HttpUrl url) {
         SiteIcon siteIcon = new SiteIcon();
         siteIcon.url = url;
+        siteIcon.imageLoaderV2 = imageLoaderV2;
         return siteIcon;
     }
 
-    public static SiteIcon fromDrawable(Drawable drawable) {
+    public static SiteIcon fromDrawable(ImageLoaderV2 imageLoaderV2, Drawable drawable) {
         SiteIcon siteIcon = new SiteIcon();
         siteIcon.drawable = drawable;
+        siteIcon.imageLoaderV2 = imageLoaderV2;
         return siteIcon;
     }
 
@@ -57,7 +59,7 @@ public class SiteIcon {
         if (drawable != null) {
             result.onSiteIcon(SiteIcon.this, drawable);
         } else if (url != null) {
-            injector().instance(ImageLoaderV2.class).get(url.toString(), new ImageListener() {
+            imageLoaderV2.get(url.toString(), new ImageListener() {
                 @Override
                 public void onResponse(ImageContainer response, boolean isImmediate) {
                     if (response.getBitmap() != null) {

@@ -25,6 +25,7 @@ import androidx.annotation.NonNull;
 
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.core.database.DatabaseManager;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.manager.ThreadSaveManager;
 import com.github.adamantcheese.chan.core.presenter.MediaSettingsControllerPresenter;
 import com.github.adamantcheese.chan.core.settings.ChanSettings;
@@ -52,7 +53,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAppContext;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getString;
 
@@ -88,9 +88,13 @@ public class MediaSettingsController
     }
 
     @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
+    }
+
+    @Override
     public void onCreate() {
         super.onCreate();
-        inject(this);
 
         EventBus.getDefault().register(this);
         navigation.setTitle(R.string.settings_screen_media);

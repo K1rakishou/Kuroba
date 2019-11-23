@@ -7,7 +7,9 @@ import android.text.TextUtils;
 import com.github.adamantcheese.chan.core.model.Post;
 import com.github.adamantcheese.chan.core.site.common.DefaultPostParser;
 import com.github.adamantcheese.chan.core.site.parser.CommentParser;
+import com.github.adamantcheese.chan.core.site.parser.CommentParserHelper;
 import com.github.adamantcheese.chan.ui.theme.Theme;
+import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 import com.github.adamantcheese.chan.utils.Logger;
 
 import org.jsoup.Jsoup;
@@ -23,10 +25,12 @@ public class DvachPostParser extends DefaultPostParser {
     private Pattern colorPattern = Pattern.compile("color:rgb\\((\\d+),(\\d+),(\\d+)\\);");
     private static final String TAG = "DvachPostParser";
 
-    private CommentParser commentParser;
-
-    public DvachPostParser(CommentParser commentParser) {
-        super(commentParser);
+    public DvachPostParser(
+            ThemeHelper themeHelper,
+            CommentParser commentParser,
+            CommentParserHelper commentParserHelper
+    ) {
+        super(themeHelper, commentParser, commentParserHelper);
     }
 
     @Override

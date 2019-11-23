@@ -45,7 +45,7 @@ import com.github.adamantcheese.chan.StartActivity;
 import com.github.adamantcheese.chan.core.cache.FileCache;
 import com.github.adamantcheese.chan.core.cache.FileCacheDownloader;
 import com.github.adamantcheese.chan.core.cache.FileCacheListener;
-import com.github.adamantcheese.chan.core.di.NetModule;
+import com.github.adamantcheese.chan.core.di.module.application.NetModule;
 import com.github.adamantcheese.chan.core.image.ImageLoaderV2;
 import com.github.adamantcheese.chan.core.model.PostImage;
 import com.github.adamantcheese.chan.core.model.orm.Loadable;
@@ -73,7 +73,6 @@ import javax.inject.Inject;
 import pl.droidsonroids.gif.GifDrawable;
 import pl.droidsonroids.gif.GifImageView;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAppContext;
 
 public class MultiImageView extends FrameLayout implements View.OnClickListener, AudioListener, LifecycleObserver {
@@ -143,17 +142,15 @@ public class MultiImageView extends FrameLayout implements View.OnClickListener,
         super(context, attrs, defStyle);
         this.context = context;
 
-        inject(this);
+        AndroidUtils.extractStartActivityComponent(context).inject(this);
+        ((StartActivity) context).getLifecycle().addObserver(this);
+
         setOnClickListener(this);
 
         playView = new ImageView(getContext());
         playView.setVisibility(View.GONE);
         playView.setImageResource(R.drawable.ic_play_circle_outline_white_48dp);
         addView(playView, new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, Gravity.CENTER));
-
-        if (context instanceof StartActivity) {
-            ((StartActivity) context).getLifecycle().addObserver(this);
-        }
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
@@ -242,10 +239,7 @@ public class MultiImageView extends FrameLayout implements View.OnClickListener,
         super.onDetachedFromWindow();
         cancelLoad();
 
-        if (context instanceof StartActivity) {
-            ((StartActivity) context).getLifecycle().removeObserver(this);
-        }
-
+        ((StartActivity) context).getLifecycle().removeObserver(this);
         context = null;
     }
 

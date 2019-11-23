@@ -27,6 +27,7 @@ import android.widget.TextView;
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.StartActivity;
 import com.github.adamantcheese.chan.controller.Controller;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.ui.helper.RefreshUIMessage;
 import com.github.adamantcheese.chan.utils.AndroidUtils;
 
@@ -50,6 +51,11 @@ public class SettingsController extends Controller implements AndroidUtils.OnMea
 
     public SettingsController(Context context) {
         super(context);
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+
     }
 
     @Override

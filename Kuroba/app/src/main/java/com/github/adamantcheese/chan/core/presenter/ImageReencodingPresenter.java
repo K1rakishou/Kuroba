@@ -39,29 +39,29 @@ import com.google.gson.Gson;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import javax.inject.Inject;
-
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAppContext;
 
 public class ImageReencodingPresenter {
     private final static String TAG = "ImageReencodingPresenter";
 
-    @Inject
-    ReplyManager replyManager;
-
+    private ReplyManager replyManager;
     private Executor executor = Executors.newSingleThreadExecutor();
     private ImageReencodingPresenterCallback callback;
     private Loadable loadable;
     private ImageOptions imageOptions;
     private BackgroundUtils.Cancelable cancelable;
 
-    public ImageReencodingPresenter(ImageReencodingPresenterCallback callback, Loadable loadable, ImageOptions lastOptions) {
-        inject(this);
-
+    public ImageReencodingPresenter(
+            Loadable loadable,
+            ImageOptions lastOptions,
+            ReplyManager replyManager,
+            ImageReencodingPresenterCallback callback
+    ) {
         this.loadable = loadable;
+        this.replyManager = replyManager;
         this.callback = callback;
+
         if (lastOptions != null) {
             imageOptions = lastOptions;
         } else {

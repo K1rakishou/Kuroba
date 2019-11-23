@@ -31,8 +31,6 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
-
 public class PostsFilter {
     private static final Comparator<Post> IMAGE_COMPARATOR =
             (lhs, rhs) -> rhs.getImagesCount() - lhs.getImagesCount();
@@ -66,10 +64,10 @@ public class PostsFilter {
     private Order order;
     private String query;
 
-    public PostsFilter(Order order, String query) {
+    public PostsFilter(DatabaseManager databaseManager, Order order, String query) {
         this.order = order;
         this.query = query;
-        inject(this);
+        this.databaseManager = databaseManager;
     }
 
     /**

@@ -189,7 +189,8 @@ public class StyleRule {
                               PostParser.Callback callback,
                               Post.Builder post,
                               CharSequence text,
-                              Element element) {
+                              Element element,
+                              CommentParserHelper commentParserHelper) {
         if (nullify) {
             return null;
         }
@@ -253,7 +254,7 @@ public class StyleRule {
         }
 
         if (linkify) {
-            CommentParserHelper.detectLinks(theme, post, result.toString(), new SpannableString(result));
+            commentParserHelper.detectLinks(theme, post, result.toString(), new SpannableString(result));
         }
 
         return result;

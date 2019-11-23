@@ -28,8 +28,10 @@ import com.github.adamantcheese.chan.core.site.common.vichan.VichanActions;
 import com.github.adamantcheese.chan.core.site.common.vichan.VichanApi;
 import com.github.adamantcheese.chan.core.site.common.vichan.VichanCommentParser;
 import com.github.adamantcheese.chan.core.site.common.vichan.VichanEndpoints;
+import com.github.adamantcheese.chan.core.site.parser.CommentParserHelper;
 
 import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
 
 public class Lainchan extends CommonSite {
     public static final CommonSiteUrlHandler URL_HANDLER = new CommonSiteUrlHandler() {
@@ -63,10 +65,18 @@ public class Lainchan extends CommonSite {
         }
     };
 
+    private final CommentParserHelper commentParserHelper;
+    private final OkHttpClient okHttpClient;
+
+    public Lainchan(CommentParserHelper commentParserHelper, OkHttpClient okHttpClient) {
+        this.commentParserHelper = commentParserHelper;
+        this.okHttpClient = okHttpClient;
+    }
+
     @Override
     public void setup() {
         setName("Lainchan");
-        setIcon(SiteIcon.fromFavicon(HttpUrl.parse("https://lainchan.org/favicon.ico")));
+        setIcon(SiteIcon.fromFavicon(imageLoaderV2, HttpUrl.parse("https://lainchan.org/favicon.ico")));
 
         setBoards(
                 Board.fromSiteNameCode(this, "Programming", "λ"),
@@ -101,8 +111,8 @@ public class Lainchan extends CommonSite {
         setEndpoints(new VichanEndpoints(this,
                 "https://lainchan.org",
                 "https://lainchan.org"));
-        setActions(new VichanActions(this));
+        setActions(new VichanActions(okHttpClient, this));
         setApi(new VichanApi(this));
-        setParser(new VichanCommentParser());
+        setParser(themeHelper, new VichanCommentParser(), commentParserHelper);
     }
 }

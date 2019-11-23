@@ -23,6 +23,7 @@ import android.webkit.WebView;
 
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.controller.Controller;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.model.Post;
 import com.github.adamantcheese.chan.core.site.Site;
 import com.github.adamantcheese.chan.core.site.SiteRequestModifier;
@@ -36,6 +37,11 @@ public class ReportController extends Controller {
     public ReportController(Context context, Post post) {
         super(context);
         this.post = post;
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     @SuppressLint("SetJavaScriptEnabled")

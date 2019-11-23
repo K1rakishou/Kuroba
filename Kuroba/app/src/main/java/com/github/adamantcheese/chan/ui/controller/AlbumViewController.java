@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.controller.Controller;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.model.Post;
 import com.github.adamantcheese.chan.core.model.PostImage;
 import com.github.adamantcheese.chan.core.model.orm.Loadable;
@@ -51,6 +52,11 @@ public class AlbumViewController extends Controller implements
 
     public AlbumViewController(Context context) {
         super(context);
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     @Override

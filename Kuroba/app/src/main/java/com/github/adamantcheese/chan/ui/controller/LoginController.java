@@ -26,6 +26,7 @@ import android.widget.TextView;
 
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.controller.Controller;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.site.Site;
 import com.github.adamantcheese.chan.core.site.SiteActions;
 import com.github.adamantcheese.chan.core.site.http.HttpCall;
@@ -48,6 +49,11 @@ public class LoginController extends Controller implements View.OnClickListener,
 
     public LoginController(Context context) {
         super(context);
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     public void setSite(Site site) {

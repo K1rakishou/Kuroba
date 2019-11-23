@@ -51,6 +51,7 @@ import com.github.adamantcheese.chan.core.site.Site;
 import com.github.adamantcheese.chan.core.site.SiteIcon;
 import com.github.adamantcheese.chan.core.site.common.CommonSite;
 import com.github.adamantcheese.chan.core.site.parser.CommentParser;
+import com.github.adamantcheese.chan.core.site.parser.CommentParserHelper;
 import com.github.adamantcheese.chan.ui.helper.BoardHelper;
 import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 import com.github.adamantcheese.chan.utils.AndroidUtils;
@@ -62,7 +63,6 @@ import javax.inject.Inject;
 
 import okhttp3.HttpUrl;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAppContext;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.removeFromParentView;
@@ -84,7 +84,14 @@ public class BrowseBoardsFloatingMenu extends FrameLayout implements BoardsMenuP
     private boolean dismissed = false;
 
     @Inject
-    private BoardsMenuPresenter presenter;
+    BoardsMenuPresenter presenter;
+    @Inject
+    CommentParserHelper commentParserHelper;
+    @Inject
+    ThemeHelper themeHelper;
+    @Inject
+    CommentParser commentParser;
+
     private BoardsMenuPresenter.Items items;
 
     private BrowseBoardsAdapter adapter;
@@ -94,19 +101,24 @@ public class BrowseBoardsFloatingMenu extends FrameLayout implements BoardsMenuP
 
     public BrowseBoardsFloatingMenu(Context context) {
         this(context, null);
+        init();
     }
 
     public BrowseBoardsFloatingMenu(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
+        init();
     }
 
     public BrowseBoardsFloatingMenu(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-
-        inject(this);
+        init();
 
         setFocusableInTouchMode(true);
         setFocusable(true);
+    }
+
+    private void init() {
+        AndroidUtils.extractStartActivityComponent(getContext()).inject(this);
     }
 
     public void show(ViewGroup baseView, View anchor, ClickCallback clickCallback,
@@ -144,9 +156,9 @@ public class BrowseBoardsFloatingMenu extends FrameLayout implements BoardsMenuP
                 @Override
                 public void setup() {
                     setName("App Setup");
-                    Drawable setupIcon = ThemeHelper.getTheme().settingsDrawable.makeDrawable(getAppContext());
-                    setupIcon.setColorFilter(ThemeHelper.getTheme().textPrimary, PorterDuff.Mode.SRC_IN);
-                    setIcon(SiteIcon.fromDrawable(setupIcon));
+                    Drawable setupIcon = themeHelper.getTheme().settingsDrawable.makeDrawable(getAppContext());
+                    setupIcon.setColorFilter(themeHelper.getTheme().textPrimary, PorterDuff.Mode.SRC_IN);
+                    setIcon(SiteIcon.fromDrawable(imageLoaderV2, setupIcon));
                     setBoardsType(BoardsType.STATIC);
                     setConfig(new CommonConfig() {
                     });
@@ -174,7 +186,11 @@ public class BrowseBoardsFloatingMenu extends FrameLayout implements BoardsMenuP
                     });
                     setActions(new CommonActions(null) {
                     });
-                    setParser(new CommentParser());
+                    setParser(
+                            themeHelper,
+                            BrowseBoardsFloatingMenu.this.commentParser,
+                            BrowseBoardsFloatingMenu.this.commentParserHelper
+                    );
                 }
             };
             setupSite.setup();
@@ -447,7 +463,7 @@ public class BrowseBoardsFloatingMenu extends FrameLayout implements BoardsMenuP
             text = itemView.findViewById(R.id.text);
 
             // View setup
-            text.setTypeface(ThemeHelper.getTheme().mainFont);
+            text.setTypeface(themeHelper.getTheme().mainFont);
         }
 
         public void bind(Site site) {
@@ -484,7 +500,7 @@ public class BrowseBoardsFloatingMenu extends FrameLayout implements BoardsMenuP
             text = (TextView) itemView;
 
             // View setup
-            text.setTypeface(ThemeHelper.getTheme().mainFont);
+            text.setTypeface(themeHelper.getTheme().mainFont);
         }
 
         public void bind(Board board) {

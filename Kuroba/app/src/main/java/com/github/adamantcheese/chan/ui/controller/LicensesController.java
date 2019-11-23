@@ -21,6 +21,7 @@ import android.graphics.Color;
 import android.webkit.WebView;
 
 import com.github.adamantcheese.chan.controller.Controller;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 
 public class LicensesController extends Controller {
     private String title;
@@ -30,6 +31,11 @@ public class LicensesController extends Controller {
         super(context);
         this.title = title;
         this.url = url;
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     @Override

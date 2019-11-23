@@ -14,32 +14,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.github.adamantcheese.chan.core.di;
+package com.github.adamantcheese.chan.core.di.module.application;
 
-import android.content.Context;
-
-import com.github.adamantcheese.chan.core.database.DatabaseHelper;
 import com.github.adamantcheese.chan.core.database.DatabaseManager;
+import com.github.adamantcheese.chan.core.repository.SiteRepository;
+import com.github.adamantcheese.chan.core.site.SiteResolver;
 import com.github.adamantcheese.chan.utils.Logger;
-
-import org.codejargon.feather.Provides;
 
 import javax.inject.Singleton;
 
-public class DatabaseModule {
+import dagger.Module;
+import dagger.Provides;
+
+@Module
+public class SiteModule {
 
     @Provides
     @Singleton
-    public DatabaseHelper provideDatabaseHelper(Context applicationContext) {
-        Logger.d(AppModule.DI_TAG, "Database helper");
-        return new DatabaseHelper(applicationContext);
-    }
-
-    @Provides
-    @Singleton
-    public DatabaseManager provideDatabaseManager(
+    public SiteResolver provideSiteResolver(
+            SiteRepository siteRepository,
+            DatabaseManager databaseManager
     ) {
-        Logger.d(AppModule.DI_TAG, "Database manager");
-        return new DatabaseManager();
+        Logger.d(AppModule.DI_TAG, "Site resolver");
+        return new SiteResolver(siteRepository, databaseManager);
     }
 }

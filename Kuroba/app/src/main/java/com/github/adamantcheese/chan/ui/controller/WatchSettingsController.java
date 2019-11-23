@@ -22,6 +22,7 @@ import android.widget.CompoundButton;
 import androidx.appcompat.widget.SwitchCompat;
 
 import com.github.adamantcheese.chan.R;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.settings.ChanSettings;
 import com.github.adamantcheese.chan.ui.settings.BooleanSettingView;
 import com.github.adamantcheese.chan.ui.settings.ListSettingView;
@@ -49,6 +50,11 @@ public class WatchSettingsController extends SettingsController implements Compo
 
     public WatchSettingsController(Context context) {
         super(context);
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     @Override

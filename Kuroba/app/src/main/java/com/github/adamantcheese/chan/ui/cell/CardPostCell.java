@@ -38,9 +38,12 @@ import com.github.adamantcheese.chan.ui.view.FloatingMenu;
 import com.github.adamantcheese.chan.ui.view.FloatingMenuItem;
 import com.github.adamantcheese.chan.ui.view.PostImageThumbnailView;
 import com.github.adamantcheese.chan.ui.view.ThumbnailView;
+import com.github.adamantcheese.chan.utils.AndroidUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Inject;
 
 import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.setRoundItemBackground;
@@ -61,16 +64,26 @@ public class CardPostCell extends CardView implements PostCellInterface, View.On
     private ImageView options;
     private View filterMatchColor;
 
+    @Inject
+    ThemeHelper themeHelper;
+
     public CardPostCell(Context context) {
         super(context);
+        init(context);
     }
 
     public CardPostCell(Context context, AttributeSet attrs) {
         super(context, attrs);
+        init(context);
     }
 
     public CardPostCell(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        init(context);
+    }
+
+    private void init(Context context) {
+        AndroidUtils.extractStartActivityComponent(context).inject(this);
     }
 
     @Override
@@ -226,7 +239,7 @@ public class CardPostCell extends CardView implements PostCellInterface, View.On
         }
 
         comment.setText(commentText);
-        comment.setTextColor(ThemeHelper.getTheme().textPrimary);
+        comment.setTextColor(themeHelper.getTheme().textPrimary);
 
         replies.setText(getResources().getString(R.string.card_stats, post.getReplies(), post.getImagesCount()));
     }

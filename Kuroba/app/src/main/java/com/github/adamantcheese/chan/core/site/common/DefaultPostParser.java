@@ -51,16 +51,24 @@ import static com.github.adamantcheese.chan.utils.AndroidUtils.sp;
 public class DefaultPostParser implements PostParser {
     private static final String TAG = "DefaultPostParser";
 
+    private ThemeHelper themeHelper;
     private CommentParser commentParser;
+    private CommentParserHelper commentParserHelper;
 
-    public DefaultPostParser(CommentParser commentParser) {
+    public DefaultPostParser(
+            ThemeHelper themeHelper,
+            CommentParser commentParser,
+            CommentParserHelper commentParserHelper
+    ) {
+        this.themeHelper = themeHelper;
         this.commentParser = commentParser;
+        this.commentParserHelper = commentParserHelper;
     }
 
     @Override
     public Post parse(Theme theme, Post.Builder builder, Callback callback) {
         if (theme == null) {
-            theme = ThemeHelper.getTheme();
+            theme = themeHelper.getTheme();
         }
 
         if (!TextUtils.isEmpty(builder.name)) {
@@ -193,7 +201,7 @@ public class DefaultPostParser implements PostParser {
             Logger.e(TAG, "Error parsing comment html", e);
         }
 
-        CommentParserHelper.addPostImages(post);
+        commentParserHelper.addPostImages(post);
 
         return total;
     }
@@ -206,11 +214,11 @@ public class DefaultPostParser implements PostParser {
             //this would mess up the rest of the spans if we did it afterwards, so we do it as the first step
             SpannableString spannable;
             if (ChanSettings.parseYoutubeTitles.get()) {
-                spannable = CommentParserHelper.replaceYoutubeLinks(theme, post, text);
-                CommentParserHelper.detectLinks(theme, post, spannable.toString(), spannable);
+                spannable = commentParserHelper.replaceYoutubeLinks(theme, post, text);
+                commentParserHelper.detectLinks(theme, post, spannable.toString(), spannable);
             } else {
                 spannable = new SpannableString(text);
-                CommentParserHelper.detectLinks(theme, post, text, spannable);
+                commentParserHelper.detectLinks(theme, post, text, spannable);
             }
 
             return spannable;

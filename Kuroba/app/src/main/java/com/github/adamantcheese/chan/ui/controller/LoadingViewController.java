@@ -6,6 +6,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.github.adamantcheese.chan.R;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 
 public class LoadingViewController extends BaseFloatingController {
     private TextView textView;
@@ -16,6 +17,11 @@ public class LoadingViewController extends BaseFloatingController {
         super(context);
 
         this.indeterminate = indeterminate;
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     @Override

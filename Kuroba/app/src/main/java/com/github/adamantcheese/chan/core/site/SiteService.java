@@ -17,24 +17,68 @@
 package com.github.adamantcheese.chan.core.site;
 
 
+import com.android.volley.RequestQueue;
+import com.github.adamantcheese.chan.core.database.DatabaseManager;
+import com.github.adamantcheese.chan.core.image.ImageLoaderV2;
+import com.github.adamantcheese.chan.core.manager.BoardManager;
 import com.github.adamantcheese.chan.core.model.orm.SiteModel;
 import com.github.adamantcheese.chan.core.repository.SiteRepository;
 import com.github.adamantcheese.chan.core.settings.json.JsonSettings;
+import com.github.adamantcheese.chan.core.site.http.HttpCallManager;
+import com.github.adamantcheese.chan.core.site.parser.CommentParser;
+import com.github.adamantcheese.chan.core.site.parser.CommentParserHelper;
+import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
+import com.google.gson.Gson;
 
 import java.util.List;
 
 import javax.inject.Inject;
 
+import okhttp3.OkHttpClient;
+
 public class SiteService {
     private SiteRepository siteRepository;
     private SiteResolver resolver;
+    private OkHttpClient okHttpClient;
+    private DatabaseManager databaseManager;
+    private ImageLoaderV2 imageLoaderV2;
+    private HttpCallManager httpCallManager;
+    private RequestQueue requestQueue;
+    private BoardManager boardManager;
+    private CommentParser commentParser;
+    private CommentParserHelper commentParserHelper;
+    private Gson gson;
+    private ThemeHelper themeHelper;
 
     private boolean initialized = false;
 
     @Inject
-    public SiteService(SiteRepository siteRepository, SiteResolver resolver) {
+    public SiteService(
+            SiteRepository siteRepository,
+            SiteResolver resolver,
+            OkHttpClient okHttpClient,
+            DatabaseManager databaseManager,
+            ImageLoaderV2 imageLoaderV2,
+            HttpCallManager httpCallManager,
+            RequestQueue requestQueue,
+            BoardManager boardManager,
+            CommentParser commentParser,
+            CommentParserHelper commentParserHelper,
+            Gson gson,
+            ThemeHelper themeHelper
+    ) {
         this.siteRepository = siteRepository;
         this.resolver = resolver;
+        this.okHttpClient = okHttpClient;
+        this.databaseManager = databaseManager;
+        this.imageLoaderV2 = imageLoaderV2;
+        this.httpCallManager = httpCallManager;
+        this.requestQueue = requestQueue;
+        this.boardManager = boardManager;
+        this.commentParser = commentParser;
+        this.commentParserHelper = commentParserHelper;
+        this.gson = gson;
+        this.themeHelper = themeHelper;
     }
 
     public boolean areSitesSetup() {
@@ -61,7 +105,19 @@ public class SiteService {
             return;
         }
 
-        Site site = siteRepository.createFromClass(siteClass);
+        Site site = siteRepository.createFromClass(
+                siteClass,
+                okHttpClient,
+                imageLoaderV2,
+                httpCallManager,
+                requestQueue,
+                boardManager,
+                commentParser,
+                commentParserHelper,
+                this,
+                themeHelper,
+                gson
+        );
 
         callback.onSiteAdded(site);
     }
@@ -69,7 +125,7 @@ public class SiteService {
     public void updateUserSettings(Site site, JsonSettings jsonSettings) {
         SiteModel siteModel = siteRepository.byId(site.id());
         if (siteModel == null) throw new NullPointerException("siteModel == null");
-        siteRepository.updateSiteUserSettingsAsync(siteModel, jsonSettings);
+        siteRepository.updateSiteUserSettingsAsync(gson, siteModel, jsonSettings);
     }
 
     public void updateOrdering(List<Site> sitesInNewOrder) {
@@ -81,7 +137,19 @@ public class SiteService {
             throw new IllegalStateException("Already initialized");
         }
         initialized = true;
-        siteRepository.initialize();
+        siteRepository.initialize(
+                okHttpClient,
+                databaseManager,
+                imageLoaderV2,
+                httpCallManager,
+                requestQueue,
+                boardManager,
+                commentParser,
+                commentParserHelper,
+                this,
+                themeHelper,
+                gson
+        );
     }
 
     public interface SiteAddCallback {

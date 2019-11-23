@@ -32,6 +32,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.controller.Controller;
+import com.github.adamantcheese.chan.core.cache.FileCache;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.model.PostImage;
 import com.github.adamantcheese.chan.core.model.orm.Loadable;
 import com.github.adamantcheese.chan.core.saver.ImageSaveTask;
@@ -41,6 +43,7 @@ import com.github.adamantcheese.chan.ui.toolbar.ToolbarMenuItem;
 import com.github.adamantcheese.chan.ui.view.GridRecyclerView;
 import com.github.adamantcheese.chan.ui.view.PostImageThumbnailView;
 import com.github.adamantcheese.chan.utils.RecyclerUtils;
+import com.github.k1rakishou.fsaf.FileManager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
@@ -48,7 +51,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
 
 public class AlbumDownloadController extends Controller implements View.OnClickListener {
@@ -57,16 +59,24 @@ public class AlbumDownloadController extends Controller implements View.OnClickL
 
     private List<AlbumDownloadItem> items = new ArrayList<>();
     private Loadable loadable;
+    private boolean allChecked = true;
 
     @Inject
     ImageSaver imageSaver;
-
-    private boolean allChecked = true;
+    @Inject
+    FileCache fileCache;
+    @Inject
+    FileManager fileManager;
+    @Inject
+    ThemeHelper themeHelper;
 
     public AlbumDownloadController(Context context) {
         super(context);
+    }
 
-        inject(this);
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     @Override
@@ -83,7 +93,7 @@ public class AlbumDownloadController extends Controller implements View.OnClickL
 
         download = view.findViewById(R.id.download);
         download.setOnClickListener(this);
-        ThemeHelper.getTheme().applyFabColor(download);
+        themeHelper.getTheme().applyFabColor(download);
         recyclerView = view.findViewById(R.id.recycler_view);
         recyclerView.setHasFixedSize(true);
         GridLayoutManager gridLayoutManager = new GridLayoutManager(context, 3);
@@ -114,7 +124,14 @@ public class AlbumDownloadController extends Controller implements View.OnClickL
                             List<ImageSaveTask> tasks = new ArrayList<>(items.size());
                             for (AlbumDownloadItem item : items) {
                                 if (item.checked) {
-                                    tasks.add(new ImageSaveTask(loadable, item.postImage));
+                                    ImageSaveTask newTask = new ImageSaveTask(
+                                            fileCache,
+                                            fileManager,
+                                            loadable,
+                                            item.postImage
+                                    );
+
+                                    tasks.add(newTask);
                                 }
                             }
 

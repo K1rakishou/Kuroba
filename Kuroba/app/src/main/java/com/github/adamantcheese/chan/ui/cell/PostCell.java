@@ -80,10 +80,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import okhttp3.HttpUrl;
 
 import static android.text.TextUtils.isEmpty;
-import static com.github.adamantcheese.chan.Chan.injector;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getString;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.setRoundItemBackground;
@@ -137,16 +138,28 @@ public class PostCell extends LinearLayout implements PostCellInterface, View.On
     private PostViewMovementMethod commentMovementMethod = new PostViewMovementMethod();
     private PostViewFastMovementMethod titleMovementMethod = new PostViewFastMovementMethod();
 
+    @Inject
+    ImageLoaderV2 imageLoaderV2;
+    @Inject
+    ThemeHelper themeHelper;
+
     public PostCell(Context context) {
         super(context);
+        init(context);
     }
 
     public PostCell(Context context, AttributeSet attrs) {
         super(context, attrs);
+        init(context);
     }
 
     public PostCell(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        init(context);
+    }
+
+    private void init(Context context) {
+        AndroidUtils.extractStartActivityComponent(context).inject(this);
     }
 
     @Override
@@ -220,7 +233,7 @@ public class PostCell extends LinearLayout implements PostCellInterface, View.On
     private void showOptions(View anchor, List<FloatingMenuItem> items,
                              List<FloatingMenuItem> extraItems,
                              Object extraOption) {
-        if (ThemeHelper.getTheme().isLightTheme) {
+        if (themeHelper.getTheme().isLightTheme) {
             options.setImageResource(R.drawable.ic_overflow_black);
         }
 
@@ -257,7 +270,7 @@ public class PostCell extends LinearLayout implements PostCellInterface, View.On
         super.onAttachedToWindow();
 
         if (post != null && !bound) {
-            bindPost(ThemeHelper.getTheme(), post);
+            bindPost(themeHelper.getTheme(), post);
         }
     }
 
@@ -421,7 +434,7 @@ public class PostCell extends LinearLayout implements PostCellInterface, View.On
         icons.set(PostIcons.HTTP_ICONS, post.httpIcons != null);
 
         if (post.httpIcons != null) {
-            icons.setHttpIcons(post.httpIcons, theme, iconSizePx);
+            icons.setHttpIcons(imageLoaderV2, post.httpIcons, theme, iconSizePx);
         }
 
         icons.apply();
@@ -872,13 +885,31 @@ public class PostCell extends LinearLayout implements PostCellInterface, View.On
             }
         }
 
-        public void setHttpIcons(List<PostHttpIcon> icons, Theme theme, int size) {
+        public void setHttpIcons(
+                ImageLoaderV2 imageLoaderV2,
+                List<PostHttpIcon> icons,
+                Theme theme,
+                int size
+        ) {
             httpIconTextColor = theme.detailsColor;
             httpIconTextSize = size;
             httpIcons = new ArrayList<>(icons.size());
+
             for (PostHttpIcon icon : icons) {
                 int codeIndex = icon.name.indexOf('/'); //this is for country codes
-                PostIconsHttpIcon j = new PostIconsHttpIcon(this, icon.name.substring(0, codeIndex != -1 ? codeIndex : icon.name.length()), icon.url);
+                int endIndex = codeIndex != -1
+                        ? codeIndex
+                        : icon.name.length();
+
+                String name = icon.name.substring(0, endIndex);
+
+                PostIconsHttpIcon j = new PostIconsHttpIcon(
+                        imageLoaderV2,
+                        this,
+                        name,
+                        icon.url
+                );
+
                 httpIcons.add(j);
                 j.request();
             }
@@ -970,11 +1001,11 @@ public class PostCell extends LinearLayout implements PostCellInterface, View.On
         private Bitmap bitmap;
         private ImageLoaderV2 imageLoaderV2;
 
-        private PostIconsHttpIcon(PostIcons postIcons, String name, HttpUrl url) {
+        private PostIconsHttpIcon(ImageLoaderV2 imageLoaderV2, PostIcons postIcons, String name, HttpUrl url) {
             this.postIcons = postIcons;
             this.name = name;
             this.url = url;
-            this.imageLoaderV2 = injector().instance(ImageLoaderV2.class);
+            this.imageLoaderV2 = imageLoaderV2;
         }
 
         private void request() {

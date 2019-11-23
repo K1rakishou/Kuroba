@@ -18,6 +18,7 @@ package com.github.adamantcheese.chan.core.site;
 
 
 import com.android.volley.RequestQueue;
+import com.github.adamantcheese.chan.core.image.ImageLoaderV2;
 import com.github.adamantcheese.chan.core.manager.BoardManager;
 import com.github.adamantcheese.chan.core.model.json.site.SiteConfig;
 import com.github.adamantcheese.chan.core.model.orm.Board;
@@ -25,33 +26,61 @@ import com.github.adamantcheese.chan.core.settings.SettingProvider;
 import com.github.adamantcheese.chan.core.settings.json.JsonSettings;
 import com.github.adamantcheese.chan.core.settings.json.JsonSettingsProvider;
 import com.github.adamantcheese.chan.core.site.http.HttpCallManager;
-
-import org.codejargon.feather.Feather;
+import com.github.adamantcheese.chan.core.site.parser.CommentParser;
+import com.github.adamantcheese.chan.core.site.parser.CommentParserHelper;
+import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static com.github.adamantcheese.chan.Chan.injector;
+import okhttp3.OkHttpClient;
 
 public abstract class SiteBase implements Site {
     protected int id;
     protected SiteConfig config;
 
+    protected OkHttpClient okHttpClient;
+    protected ImageLoaderV2 imageLoaderV2;
     protected HttpCallManager httpCallManager;
     protected RequestQueue requestQueue;
     protected BoardManager boardManager;
+    protected CommentParser commentParser;
+    protected CommentParserHelper commentParserHelper;
+    protected SiteService siteService;
+    protected SettingProvider settingsProvider;
+    protected ThemeHelper themeHelper;
 
     private JsonSettings userSettings;
-    protected SettingProvider settingsProvider;
-
     private boolean initialized = false;
 
     @Override
-    public void initialize(int id, SiteConfig config, JsonSettings userSettings) {
+    public void initialize(
+            int id,
+            OkHttpClient okHttpClient,
+            ImageLoaderV2 imageLoaderV2,
+            SiteConfig config,
+            JsonSettings userSettings,
+            HttpCallManager httpCallManager,
+            RequestQueue requestQueue,
+            BoardManager boardManager,
+            CommentParser commentParser,
+            CommentParserHelper commentParserHelper,
+            SiteService siteService,
+            ThemeHelper themeHelper
+    ) {
         this.id = id;
+        this.okHttpClient = okHttpClient;
+        this.imageLoaderV2 = imageLoaderV2;
         this.config = config;
         this.userSettings = userSettings;
+        this.httpCallManager = httpCallManager;
+        this.requestQueue = requestQueue;
+        this.boardManager = boardManager;
+        this.commentParser = commentParser;
+        this.commentParserHelper = commentParserHelper;
+        this.siteService = siteService;
+        this.themeHelper = themeHelper;
 
         if (initialized) {
             throw new IllegalStateException();
@@ -61,13 +90,9 @@ public abstract class SiteBase implements Site {
 
     @Override
     public void postInitialize() {
-        Feather injector = injector();
-        httpCallManager = injector.instance(HttpCallManager.class);
-        requestQueue = injector.instance(RequestQueue.class);
-        boardManager = injector.instance(BoardManager.class);
-        SiteService siteService = injector.instance(SiteService.class);
-
-        settingsProvider = new JsonSettingsProvider(userSettings, () -> siteService.updateUserSettings(this, userSettings));
+        settingsProvider = new JsonSettingsProvider(
+                userSettings,
+                () -> siteService.updateUserSettings(this, userSettings));
 
         initializeSettings();
 

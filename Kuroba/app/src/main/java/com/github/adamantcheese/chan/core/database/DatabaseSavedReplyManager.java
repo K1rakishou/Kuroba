@@ -33,10 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import javax.inject.Inject;
-
-import static com.github.adamantcheese.chan.Chan.inject;
-
 /**
  * Saved replies are posts-password combinations used to track what posts are posted by the app,
  * and used to delete posts.
@@ -47,13 +43,35 @@ public class DatabaseSavedReplyManager {
     private static final long SAVED_REPLY_TRIM_TRIGGER = 250;
     private static final long SAVED_REPLY_TRIM_COUNT = 50;
 
-    @Inject
-    DatabaseHelper helper;
+    private DatabaseHelper helper;
+    private SiteRepository siteRepository;
+    private DatabaseManager databaseManager;
 
     private final Map<Integer, List<SavedReply>> savedRepliesByNo = new HashMap<>();
 
-    public DatabaseSavedReplyManager() {
-        inject(this);
+    public DatabaseSavedReplyManager(
+            DatabaseHelper databaseHelper,
+            DatabaseManager databaseManager
+    ) {
+        this.helper = databaseHelper;
+        this.databaseManager = databaseManager;
+    }
+
+    /**
+     * FIXME: circular dependency resolution hack
+     * We have to do this to prevent dependency cycle. SiteRepository depends on DatabaseManager
+     * which depends on SiteRepository
+     * */
+    private SiteRepository getSiteRepository() {
+        if (siteRepository == null) {
+            synchronized (this) {
+                if (siteRepository == null) {
+                    siteRepository = Chan.getComponent().getSiteRepository();
+                }
+            }
+        }
+
+        return siteRepository;
     }
 
     /**
@@ -84,7 +102,7 @@ public class DatabaseSavedReplyManager {
 
     public Callable<Void> load() {
         return () -> {
-            Chan.injector().provider(DatabaseManager.class).get().trimTable(helper.savedDao, "savedreply",
+            databaseManager.trimTable(helper.savedDao, "savedreply",
                     SAVED_REPLY_TRIM_TRIGGER, SAVED_REPLY_TRIM_COUNT);
 
             final List<SavedReply> all = helper.savedDao.queryForAll();
@@ -92,7 +110,7 @@ public class DatabaseSavedReplyManager {
             synchronized (savedRepliesByNo) {
                 savedRepliesByNo.clear();
                 for (SavedReply savedReply : all) {
-                    savedReply.site = Chan.injector().instance(SiteRepository.class).forId(savedReply.siteId);
+                    savedReply.site = getSiteRepository().forId(savedReply.siteId);
 
                     List<SavedReply> list = savedRepliesByNo.get(savedReply.no);
                     if (list == null) {

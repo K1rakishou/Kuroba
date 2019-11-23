@@ -39,6 +39,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.StartActivity;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.presenter.SitesSetupPresenter;
 import com.github.adamantcheese.chan.core.presenter.SitesSetupPresenter.SiteBoardCount;
 import com.github.adamantcheese.chan.core.site.Site;
@@ -55,7 +56,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAttrColor;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.setRoundItemBackground;
 
@@ -65,6 +65,8 @@ public class SitesSetupController extends StyledToolbarNavigationController impl
 
     @Inject
     SitesSetupPresenter presenter;
+    @Inject
+    ThemeHelper themeHelper;
 
     private CrossfadeView crossfadeView;
     private FloatingActionButton addButton;
@@ -99,9 +101,13 @@ public class SitesSetupController extends StyledToolbarNavigationController impl
     }
 
     @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
+    }
+
+    @Override
     public void onCreate() {
         super.onCreate();
-        inject(this);
 
         // Inflate
         view = inflateRes(R.layout.controller_sites_setup);
@@ -125,7 +131,7 @@ public class SitesSetupController extends StyledToolbarNavigationController impl
         itemTouchHelper = new ItemTouchHelper(touchHelperCallback);
         itemTouchHelper.attachToRecyclerView(sitesRecyclerview);
         addButton.setOnClickListener(this);
-        ThemeHelper.getTheme().applyFabColor(addButton);
+        themeHelper.getTheme().applyFabColor(addButton);
         crossfadeView.toggle(false, false);
 
         // Presenter
@@ -296,8 +302,8 @@ public class SitesSetupController extends StyledToolbarNavigationController impl
 
             setRoundItemBackground(settings);
             setRoundItemBackground(removeSite);
-            ThemeHelper.getTheme().settingsDrawable.apply(settings);
-            ThemeHelper.getTheme().clearDrawable.apply(removeSite);
+            themeHelper.getTheme().settingsDrawable.apply(settings);
+            themeHelper.getTheme().clearDrawable.apply(removeSite);
 
             Drawable drawable = DrawableCompat.wrap(
                     context.getDrawable(R.drawable.ic_reorder_black_24dp)).mutate();

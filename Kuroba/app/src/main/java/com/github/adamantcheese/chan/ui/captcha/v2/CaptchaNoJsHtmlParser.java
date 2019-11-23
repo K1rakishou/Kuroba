@@ -23,7 +23,6 @@ import android.graphics.BitmapFactory;
 import androidx.annotation.NonNull;
 import androidx.core.util.Pair;
 
-import com.github.adamantcheese.chan.Chan;
 import com.github.adamantcheese.chan.utils.BackgroundUtils;
 import com.github.adamantcheese.chan.utils.IOUtils;
 import com.github.adamantcheese.chan.utils.Logger;
@@ -66,9 +65,11 @@ public class CaptchaNoJsHtmlParser {
     private static final int SUCCESS_STATUS_CODE = 200;
 
     private Context context;
+    private OkHttpClient okHttpClient;
 
-    public CaptchaNoJsHtmlParser(Context context) {
+    public CaptchaNoJsHtmlParser(Context context, OkHttpClient okHttpClient) {
         this.context = context;
+        this.okHttpClient = okHttpClient;
     }
 
     @NonNull
@@ -311,7 +312,7 @@ public class CaptchaNoJsHtmlParser {
                 .url(fullUrl)
                 .build();
 
-        try (Response response = Chan.injector().instance(OkHttpClient.class).newCall(request).execute()) {
+        try (Response response = okHttpClient.newCall(request).execute()) {
             if (response.code() != SUCCESS_STATUS_CODE) {
                 throw new CaptchaNoJsV2ParsingError(
                         "Could not download challenge image, status code = " + response.code());

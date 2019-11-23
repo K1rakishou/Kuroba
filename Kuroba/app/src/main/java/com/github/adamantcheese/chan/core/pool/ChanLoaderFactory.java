@@ -18,6 +18,10 @@ package com.github.adamantcheese.chan.core.pool;
 
 import android.util.LruCache;
 
+import com.android.volley.RequestQueue;
+import com.github.adamantcheese.chan.core.database.DatabaseManager;
+import com.github.adamantcheese.chan.core.manager.FilterEngine;
+import com.github.adamantcheese.chan.core.manager.SavedThreadLoaderManager;
 import com.github.adamantcheese.chan.core.manager.WatchManager;
 import com.github.adamantcheese.chan.core.model.orm.Loadable;
 import com.github.adamantcheese.chan.core.site.loader.ChanThreadLoader;
@@ -36,8 +40,25 @@ public class ChanLoaderFactory {
     private static final String TAG = "ChanLoaderFactory";
     public static final int THREAD_LOADERS_CACHE_SIZE = 25;
 
+    private RequestQueue volleyRequestQueue;
+    private DatabaseManager databaseManager;
+    private SavedThreadLoaderManager savedThreadLoaderManager;
+    private FilterEngine filterEngine;
+
     private Map<Loadable, ChanThreadLoader> threadLoaders = new HashMap<>();
     private LruCache<Loadable, ChanThreadLoader> threadLoadersCache = new LruCache<>(THREAD_LOADERS_CACHE_SIZE);
+
+    public ChanLoaderFactory(
+            RequestQueue volleyRequestQueue,
+            DatabaseManager databaseManager,
+            SavedThreadLoaderManager savedThreadLoaderManager,
+            FilterEngine filterEngine
+    ) {
+        this.volleyRequestQueue = volleyRequestQueue;
+        this.databaseManager = databaseManager;
+        this.savedThreadLoaderManager = savedThreadLoaderManager;
+        this.filterEngine = filterEngine;
+    }
 
     public ChanThreadLoader obtain(Loadable loadable, WatchManager watchManager, ChanThreadLoader.ChanLoaderCallback listener) {
         ChanThreadLoader chanLoader;
@@ -56,11 +77,26 @@ public class ChanLoaderFactory {
             }
 
             if (chanLoader == null) {
-                chanLoader = new ChanThreadLoader(loadable, watchManager);
+                chanLoader = new ChanThreadLoader(
+                        loadable,
+                        watchManager,
+                        volleyRequestQueue,
+                        databaseManager,
+                        filterEngine,
+                        savedThreadLoaderManager
+                );
+
                 threadLoaders.put(loadable, chanLoader);
             }
         } else {
-            chanLoader = new ChanThreadLoader(loadable, watchManager);
+            chanLoader = new ChanThreadLoader(
+                    loadable,
+                    watchManager,
+                    volleyRequestQueue,
+                    databaseManager,
+                    filterEngine,
+                    savedThreadLoaderManager
+            );
         }
 
         chanLoader.addListener(listener);

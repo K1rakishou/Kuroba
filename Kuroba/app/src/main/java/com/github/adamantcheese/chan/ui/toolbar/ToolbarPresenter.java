@@ -32,12 +32,14 @@ public class ToolbarPresenter {
         POP
     }
 
+    private ThemeHelper themeHelper;
     private Callback callback;
 
     private NavigationItem item;
     private NavigationItem transition;
 
-    public ToolbarPresenter(Callback callback) {
+    public ToolbarPresenter(ThemeHelper themeHelper, Callback callback) {
+        this.themeHelper = themeHelper;
         this.callback = callback;
     }
 
@@ -59,7 +61,7 @@ public class ToolbarPresenter {
     void startTransition(NavigationItem newItem) {
         cancelTransitionIfNeeded();
         if (closeSearchIfNeeded()) {
-            callback.showForNavigationItem(item, ThemeHelper.getTheme(), AnimationStyle.NONE);
+            callback.showForNavigationItem(item, themeHelper.getTheme(), AnimationStyle.NONE);
         }
 
         transition = newItem;
@@ -76,7 +78,7 @@ public class ToolbarPresenter {
 
         if (didComplete) {
             item = transition;
-            callback.showForNavigationItem(item, ThemeHelper.getTheme(), AnimationStyle.NONE);
+            callback.showForNavigationItem(item, themeHelper.getTheme(), AnimationStyle.NONE);
         }
         transition = null;
     }
@@ -95,7 +97,7 @@ public class ToolbarPresenter {
         cancelTransitionIfNeeded();
 
         item.search = true;
-        callback.showForNavigationItem(item, ThemeHelper.getTheme(), AnimationStyle.NONE);
+        callback.showForNavigationItem(item, themeHelper.getTheme(), AnimationStyle.NONE);
 
         callback.onSearchVisibilityChanged(item, true);
     }

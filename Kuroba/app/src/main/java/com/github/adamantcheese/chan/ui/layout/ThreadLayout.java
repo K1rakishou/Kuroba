@@ -44,6 +44,7 @@ import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.StartActivity;
 import com.github.adamantcheese.chan.controller.Controller;
 import com.github.adamantcheese.chan.core.database.DatabaseManager;
+import com.github.adamantcheese.chan.core.manager.ReplyManager;
 import com.github.adamantcheese.chan.core.model.ChanThread;
 import com.github.adamantcheese.chan.core.model.Post;
 import com.github.adamantcheese.chan.core.model.PostImage;
@@ -66,6 +67,7 @@ import com.github.adamantcheese.chan.ui.view.LoadView;
 import com.github.adamantcheese.chan.ui.view.ThumbnailView;
 import com.github.adamantcheese.chan.utils.AndroidUtils;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,7 +75,6 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.fixSnackbarText;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getString;
 
@@ -97,9 +98,14 @@ public class ThreadLayout extends CoordinatorLayout implements
 
     @Inject
     DatabaseManager databaseManager;
-
     @Inject
     ThreadPresenter presenter;
+    @Inject
+    ReplyManager replyManager;
+    @Inject
+    Gson gson;
+    @Inject
+    ThemeHelper themeHelper;
 
     private ThreadLayoutCallback callback;
 
@@ -133,7 +139,8 @@ public class ThreadLayout extends CoordinatorLayout implements
 
     public ThreadLayout(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        inject(this);
+
+        AndroidUtils.extractStartActivityComponent(context).inject(this);
     }
 
     public void create(ThreadLayoutCallback callback) {
@@ -162,9 +169,9 @@ public class ThreadLayout extends CoordinatorLayout implements
         presenter.setContext(getContext());
         threadListLayout.setCallbacks(presenter, presenter, presenter, presenter, this);
         postPopupHelper = new PostPopupHelper(getContext(), presenter, this);
-        imageReencodingHelper = new ImageOptionsHelper(getContext(), this);
-        removedPostsHelper = new RemovedPostsHelper(getContext(), presenter, this);
-        errorText.setTypeface(ThemeHelper.getTheme().mainFont);
+        imageReencodingHelper = new ImageOptionsHelper(getContext(), replyManager, gson, themeHelper, this);
+        removedPostsHelper = new RemovedPostsHelper(getContext(), databaseManager, presenter, this);
+        errorText.setTypeface(themeHelper.getTheme().mainFont);
         errorRetryButton.setOnClickListener(this);
 
         // Setup
@@ -174,7 +181,7 @@ public class ThreadLayout extends CoordinatorLayout implements
         } else {
             replyButton.setOnClickListener(this);
             replyButton.setToolbar(callback.getToolbar());
-            ThemeHelper.getTheme().applyFabColor(replyButton);
+            themeHelper.getTheme().applyFabColor(replyButton);
         }
 
         presenter.create(this);
@@ -356,7 +363,7 @@ public class ThreadLayout extends CoordinatorLayout implements
         if (ChanSettings.openLinkBrowser.get()) {
             AndroidUtils.openLink(link);
         } else {
-            AndroidUtils.openLinkInBrowser((Activity) getContext(), link);
+            AndroidUtils.openLinkInBrowser((Activity) getContext(), themeHelper, link);
         }
     }
 
@@ -488,8 +495,8 @@ public class ThreadLayout extends CoordinatorLayout implements
         @SuppressLint("InflateParams") final View view = LayoutInflater.from(getContext())
                 .inflate(R.layout.dialog_post_delete, null);
         CheckBox checkBox = view.findViewById(R.id.image_only);
-        checkBox.setButtonTintList(ColorStateList.valueOf(ThemeHelper.getTheme().textPrimary));
-        checkBox.setTextColor(ColorStateList.valueOf(ThemeHelper.getTheme().textPrimary));
+        checkBox.setButtonTintList(ColorStateList.valueOf(themeHelper.getTheme().textPrimary));
+        checkBox.setTextColor(ColorStateList.valueOf(themeHelper.getTheme().textPrimary));
         new AlertDialog.Builder(getContext())
                 .setTitle(R.string.delete_confirm)
                 .setView(view)

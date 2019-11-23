@@ -37,15 +37,16 @@ import com.github.adamantcheese.chan.core.model.orm.Board;
 import com.github.adamantcheese.chan.core.model.orm.Loadable;
 import com.github.adamantcheese.chan.core.site.sites.chan4.Chan4PagesRequest;
 import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
+import com.github.adamantcheese.chan.utils.AndroidUtils;
+
+import javax.inject.Inject;
 
 public class ThreadStatusCell extends LinearLayout implements View.OnClickListener {
     private static final int UPDATE_INTERVAL = 1000;
     private static final int MESSAGE_INVALIDATE = 1;
 
     private Callback callback;
-
     private boolean running = false;
-
     private TextView text;
     private String error;
     private Handler handler = new Handler(msg -> {
@@ -60,8 +61,12 @@ public class ThreadStatusCell extends LinearLayout implements View.OnClickListen
         }
     });
 
+    @Inject
+    ThemeHelper themeHelper;
+
     public ThreadStatusCell(Context context, AttributeSet attrs) {
         super(context, attrs);
+        AndroidUtils.extractStartActivityComponent(context).inject(this);
 
         setBackgroundResource(R.drawable.item_background);
     }
@@ -70,7 +75,7 @@ public class ThreadStatusCell extends LinearLayout implements View.OnClickListen
     protected void onFinishInflate() {
         super.onFinishInflate();
         text = findViewById(R.id.text);
-        text.setTypeface(ThemeHelper.getTheme().mainFont);
+        text.setTypeface(themeHelper.getTheme().mainFont);
 
         setOnClickListener(this);
     }

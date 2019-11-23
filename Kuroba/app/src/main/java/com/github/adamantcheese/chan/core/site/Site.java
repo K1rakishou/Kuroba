@@ -16,17 +16,26 @@
  */
 package com.github.adamantcheese.chan.core.site;
 
+import com.android.volley.RequestQueue;
+import com.github.adamantcheese.chan.core.image.ImageLoaderV2;
+import com.github.adamantcheese.chan.core.manager.BoardManager;
 import com.github.adamantcheese.chan.core.model.Post;
 import com.github.adamantcheese.chan.core.model.json.site.SiteConfig;
 import com.github.adamantcheese.chan.core.model.orm.Board;
 import com.github.adamantcheese.chan.core.model.orm.Loadable;
 import com.github.adamantcheese.chan.core.settings.json.JsonSettings;
 import com.github.adamantcheese.chan.core.site.http.DeleteRequest;
+import com.github.adamantcheese.chan.core.site.http.HttpCallManager;
 import com.github.adamantcheese.chan.core.site.http.LoginRequest;
 import com.github.adamantcheese.chan.core.site.http.Reply;
 import com.github.adamantcheese.chan.core.site.parser.ChanReader;
+import com.github.adamantcheese.chan.core.site.parser.CommentParser;
+import com.github.adamantcheese.chan.core.site.parser.CommentParserHelper;
+import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 
 import java.util.List;
+
+import okhttp3.OkHttpClient;
 
 public interface Site {
     enum Feature {
@@ -124,13 +133,26 @@ public interface Site {
      * @param config       the site config
      * @param userSettings the site user settings
      */
-    void initialize(int id, SiteConfig config, JsonSettings userSettings);
+    void initialize(
+            int id,
+            OkHttpClient okHttpClient,
+            ImageLoaderV2 imageLoaderV2,
+            SiteConfig config,
+            JsonSettings userSettings,
+            HttpCallManager httpCallManager,
+            RequestQueue requestQueue,
+            BoardManager boardManager,
+            CommentParser commentParser,
+            CommentParserHelper commentParserHelper,
+            SiteService siteService,
+            ThemeHelper themeHelper
+    );
 
     void postInitialize();
 
     /**
      * Global positive (>0) integer that uniquely identifies this site.<br>
-     * Use the id received from {@link #initialize(int, SiteConfig, JsonSettings)}.
+     * Use the id received from {@link #initialize}.
      *
      * @return a positive (>0) integer that uniquely identifies this site.
      */

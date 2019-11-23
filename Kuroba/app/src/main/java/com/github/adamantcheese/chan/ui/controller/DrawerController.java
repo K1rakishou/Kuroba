@@ -32,6 +32,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.controller.Controller;
 import com.github.adamantcheese.chan.controller.NavigationController;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.manager.WatchManager;
 import com.github.adamantcheese.chan.core.manager.WatchManager.PinMessages;
 import com.github.adamantcheese.chan.core.model.orm.Loadable;
@@ -49,7 +50,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.ui.adapter.DrawerAdapter.TYPE_PIN;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.fixSnackbarText;
 
@@ -68,9 +68,13 @@ public class DrawerController extends Controller implements DrawerAdapter.Callba
     }
 
     @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
+    }
+
+    @Override
     public void onCreate() {
         super.onCreate();
-        inject(this);
 
         EventBus.getDefault().register(this);
 

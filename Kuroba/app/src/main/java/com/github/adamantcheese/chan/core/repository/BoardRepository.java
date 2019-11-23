@@ -45,7 +45,7 @@ public class BoardRepository implements Observer {
     @Inject
     public BoardRepository(DatabaseManager databaseManager, SiteRepository siteRepository) {
         this.databaseManager = databaseManager;
-        databaseBoardManager = databaseManager.getDatabaseBoardManager();
+        this.databaseBoardManager = databaseManager.getDatabaseBoardManager();
 
         allSites = siteRepository.all();
     }

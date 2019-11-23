@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.github.adamantcheese.chan.core.di;
+package com.github.adamantcheese.chan.core.di.module.application;
 
 import com.github.adamantcheese.chan.core.settings.json.BooleanJsonSetting;
 import com.github.adamantcheese.chan.core.settings.json.IntegerJsonSetting;
@@ -26,10 +26,12 @@ import com.github.adamantcheese.chan.utils.Logger;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import org.codejargon.feather.Provides;
-
 import javax.inject.Singleton;
 
+import dagger.Module;
+import dagger.Provides;
+
+@Module
 public class GsonModule {
 
     @Provides

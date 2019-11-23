@@ -29,13 +29,14 @@ import android.os.IBinder;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+import com.github.adamantcheese.chan.Chan;
 import com.github.adamantcheese.chan.R;
+import com.github.adamantcheese.chan.core.di.component.service.SavingNotificationComponent;
 
 import org.greenrobot.eventbus.EventBus;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAppContext;
 
 public class SavingNotification extends Service {
@@ -45,12 +46,12 @@ public class SavingNotification extends Service {
 
     private String NOTIFICATION_ID_STR = "3";
     private int NOTIFICATION_ID = 3;
+    private int doneTasks;
+    private int totalTasks;
+    private SavingNotificationComponent serviceComponent;
 
     @Inject
     NotificationManager notificationManager;
-
-    private int doneTasks;
-    private int totalTasks;
 
     @Nullable
     @Override
@@ -61,9 +62,18 @@ public class SavingNotification extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        inject(this);
+
+        serviceComponent = Chan.getComponent().savingNotificationComponent();
+        serviceComponent.inject(this);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            notificationManager.createNotificationChannel(new NotificationChannel(NOTIFICATION_ID_STR, "Save notification", NotificationManager.IMPORTANCE_LOW));
+            NotificationChannel notificationChannel = new NotificationChannel(
+                    NOTIFICATION_ID_STR,
+                    "Save notification",
+                    NotificationManager.IMPORTANCE_LOW
+            );
+
+            notificationManager.createNotificationChannel(notificationChannel);
         }
 
         startForeground(NOTIFICATION_ID, getNotification());

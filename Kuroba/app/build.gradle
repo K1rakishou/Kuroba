@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 
 android {
     // !!! IMPORTANT !!!
@@ -251,7 +252,6 @@ dependencies {
     implementation 'org.nibor.autolink:autolink:0.10.0'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'me.xdrop:fuzzywuzzy:1.2.0'
-    implementation 'org.codejargon.feather:feather:1.0'
     implementation 'com.vladsch.flexmark:flexmark:0.50.44'
     implementation 'com.vdurmont:emoji-java:5.1.1'
     implementation 'io.reactivex.rxjava2:rxjava:2.2.12'
@@ -259,6 +259,9 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.github.K1rakishou:Fuck-Storage-Access-Framework:v1.0-alpha'
     implementation 'joda-time:joda-time:2.10.5'
+
+    implementation "com.google.dagger:dagger:$dagger_version"
+    kapt "com.google.dagger:dagger-compiler:$dagger_version"
 
     testImplementation 'junit:junit:4.12'
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.0-beta-3'

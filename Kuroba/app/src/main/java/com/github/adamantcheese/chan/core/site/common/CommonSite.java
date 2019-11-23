@@ -23,6 +23,9 @@ import android.webkit.WebView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.android.volley.RequestQueue;
+import com.github.adamantcheese.chan.core.image.ImageLoaderV2;
+import com.github.adamantcheese.chan.core.manager.BoardManager;
 import com.github.adamantcheese.chan.core.model.Post;
 import com.github.adamantcheese.chan.core.model.json.site.SiteConfig;
 import com.github.adamantcheese.chan.core.model.orm.Board;
@@ -35,17 +38,21 @@ import com.github.adamantcheese.chan.core.site.SiteBase;
 import com.github.adamantcheese.chan.core.site.SiteEndpoints;
 import com.github.adamantcheese.chan.core.site.SiteIcon;
 import com.github.adamantcheese.chan.core.site.SiteRequestModifier;
+import com.github.adamantcheese.chan.core.site.SiteService;
 import com.github.adamantcheese.chan.core.site.SiteUrlHandler;
 import com.github.adamantcheese.chan.core.site.http.DeleteRequest;
 import com.github.adamantcheese.chan.core.site.http.DeleteResponse;
 import com.github.adamantcheese.chan.core.site.http.HttpCall;
+import com.github.adamantcheese.chan.core.site.http.HttpCallManager;
 import com.github.adamantcheese.chan.core.site.http.LoginRequest;
 import com.github.adamantcheese.chan.core.site.http.Reply;
 import com.github.adamantcheese.chan.core.site.http.ReplyResponse;
 import com.github.adamantcheese.chan.core.site.parser.ChanReader;
 import com.github.adamantcheese.chan.core.site.parser.CommentParser;
+import com.github.adamantcheese.chan.core.site.parser.CommentParserHelper;
 import com.github.adamantcheese.chan.core.site.parser.PostParser;
 import com.github.adamantcheese.chan.ui.helper.PostHelper;
+import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -57,6 +64,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -74,14 +82,39 @@ public abstract class CommonSite extends SiteBase {
     private CommonActions actions;
     private CommonApi api;
     private CommonRequestModifier requestModifier;
-
-    public PostParser postParser;
-
+    protected PostParser postParser;
     private List<Board> staticBoards = new ArrayList<>();
 
     @Override
-    public void initialize(int id, SiteConfig config, JsonSettings userSettings) {
-        super.initialize(id, config, userSettings);
+    public void initialize(
+            int id,
+            OkHttpClient okHttpClient,
+            ImageLoaderV2 imageLoaderV2,
+            SiteConfig config,
+            JsonSettings userSettings,
+            HttpCallManager httpCallManager,
+            RequestQueue requestQueue,
+            BoardManager boardManager,
+            CommentParser commentParser,
+            CommentParserHelper commentParserHelper,
+            SiteService siteService,
+            ThemeHelper themeHelper
+    ) {
+        super.initialize(
+                id,
+                okHttpClient,
+                imageLoaderV2,
+                config,
+                userSettings,
+                httpCallManager,
+                requestQueue,
+                boardManager,
+                commentParser,
+                commentParserHelper,
+                siteService,
+                themeHelper
+        );
+
         setup();
 
         if (name == null) {
@@ -166,8 +199,12 @@ public abstract class CommonSite extends SiteBase {
         this.api = api;
     }
 
-    public void setParser(CommentParser commentParser) {
-        postParser = new DefaultPostParser(commentParser);
+    public void setParser(
+            ThemeHelper themeHelper,
+            CommentParser commentParser,
+            CommentParserHelper commentParserHelper
+    ) {
+        postParser = new DefaultPostParser(themeHelper, commentParser, commentParserHelper);
     }
 
     /*

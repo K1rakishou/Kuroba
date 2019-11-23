@@ -45,9 +45,12 @@ import com.github.adamantcheese.chan.ui.theme.ArrowMenuDrawable;
 import com.github.adamantcheese.chan.ui.theme.DropdownArrowDrawable;
 import com.github.adamantcheese.chan.ui.theme.Theme;
 import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
+import com.github.adamantcheese.chan.utils.AndroidUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 import static android.text.TextUtils.isEmpty;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
@@ -73,21 +76,19 @@ import static com.github.adamantcheese.chan.utils.AndroidUtils.removeFromParentV
  */
 public class ToolbarContainer extends FrameLayout {
     private Callback callback;
-
     private ArrowMenuDrawable arrowMenu;
+
+    @Inject
+    ThemeHelper themeHelper;
 
     @Nullable
     private ItemView previousView;
-
     @Nullable
     private ItemView currentView;
-
     @Nullable
     private ItemView transitionView;
-
     @Nullable
     private ToolbarPresenter.TransitionAnimationStyle transitionAnimationStyle;
-
     private Map<View, Animator> animatorSet = new HashMap<>();
 
     public ToolbarContainer(Context context) {
@@ -100,6 +101,8 @@ public class ToolbarContainer extends FrameLayout {
 
     public ToolbarContainer(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+
+        AndroidUtils.extractStartActivityComponent(context).inject(this);
     }
 
     public void setCallback(Callback callback) {
@@ -447,7 +450,7 @@ public class ToolbarContainer extends FrameLayout {
 
             // Title
             final TextView titleView = menu.findViewById(R.id.title);
-            titleView.setTypeface(theme != null ? theme.mainFont : ThemeHelper.getTheme().mainFont);
+            titleView.setTypeface(theme != null ? theme.mainFont : themeHelper.getTheme().mainFont);
             titleView.setText(item.title);
             titleView.setTextColor(Color.WHITE);
 

@@ -23,6 +23,7 @@ import androidx.annotation.NonNull;
 
 import com.github.adamantcheese.chan.Chan;
 import com.github.adamantcheese.chan.utils.Logger;
+import com.github.k1rakishou.fsaf.FileManager;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.misc.TransactionManager;
 
@@ -38,10 +39,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
-
-import static com.github.adamantcheese.chan.Chan.inject;
-
 /**
  * The central point for database related access.<br>
  * <b>All database queries are run on a single database thread</b>, therefor all functions return a
@@ -56,9 +53,7 @@ public class DatabaseManager {
     private final ExecutorService backgroundExecutor;
     private Thread executorThread;
 
-    @Inject
-    DatabaseHelper helper;
-
+    private final DatabaseHelper helper;
     private final DatabasePinManager databasePinManager;
     private final DatabaseLoadableManager databaseLoadableManager;
     private final DatabaseHistoryManager databaseHistoryManager;
@@ -69,24 +64,26 @@ public class DatabaseManager {
     private final DatabaseHideManager databaseHideManager;
     private final DatabaseSavedThreadManager databaseSavedThreadManager;
 
-    @Inject
-    public DatabaseManager() {
-        inject(this);
-
+    public DatabaseManager(
+            FileManager fileManager,
+            DatabaseHelper databaseHelper
+    ) {
         backgroundExecutor = new ThreadPoolExecutor(
                 1, 1,
                 1000L, TimeUnit.DAYS,
                 new LinkedBlockingQueue<>());
 
-        databaseLoadableManager = new DatabaseLoadableManager();
-        databasePinManager = new DatabasePinManager(databaseLoadableManager);
-        databaseHistoryManager = new DatabaseHistoryManager(databaseLoadableManager);
-        databaseSavedReplyManager = new DatabaseSavedReplyManager();
-        databaseFilterManager = new DatabaseFilterManager();
-        databaseBoardManager = new DatabaseBoardManager();
-        databaseSiteManager = new DatabaseSiteManager();
-        databaseHideManager = new DatabaseHideManager();
-        databaseSavedThreadManager = new DatabaseSavedThreadManager();
+        this.helper = databaseHelper;
+        this.databaseLoadableManager = new DatabaseLoadableManager(helper, this);
+        this.databasePinManager = new DatabasePinManager(helper, databaseLoadableManager);
+        this.databaseHistoryManager = new DatabaseHistoryManager(helper, this, databaseLoadableManager);
+        this.databaseSavedReplyManager = new DatabaseSavedReplyManager(helper, this);
+        this.databaseFilterManager = new DatabaseFilterManager(helper);
+        this.databaseBoardManager = new DatabaseBoardManager(helper);
+        this.databaseSiteManager = new DatabaseSiteManager(helper);
+        this.databaseHideManager = new DatabaseHideManager(helper, this);
+        this.databaseSavedThreadManager = new DatabaseSavedThreadManager(helper, fileManager);
+
         EventBus.getDefault().register(this);
     }
 

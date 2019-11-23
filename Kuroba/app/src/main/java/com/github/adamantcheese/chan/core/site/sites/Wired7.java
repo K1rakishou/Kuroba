@@ -31,6 +31,7 @@ import com.github.adamantcheese.chan.core.site.common.vichan.VichanCommentParser
 import com.github.adamantcheese.chan.core.site.common.vichan.VichanEndpoints;
 import com.github.adamantcheese.chan.core.site.http.Reply;
 import com.github.adamantcheese.chan.core.site.http.ReplyResponse;
+import com.github.adamantcheese.chan.core.site.parser.CommentParserHelper;
 
 import org.jsoup.Jsoup;
 
@@ -38,6 +39,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
 import okhttp3.Response;
 
 import static android.text.TextUtils.isEmpty;
@@ -74,10 +76,18 @@ public class Wired7 extends CommonSite {
         }
     };
 
+    private final CommentParserHelper commentParserHelper;
+    private final OkHttpClient okHttpClient;
+
+    public Wired7(CommentParserHelper commentParserHelper, OkHttpClient okHttpClient) {
+        this.commentParserHelper = commentParserHelper;
+        this.okHttpClient = okHttpClient;
+    }
+
     @Override
     public void setup() {
         setName("Wired-7");
-        setIcon(SiteIcon.fromFavicon(HttpUrl.parse("https://wired-7.org/favicon.ico")));
+        setIcon(SiteIcon.fromFavicon(imageLoaderV2, HttpUrl.parse("https://wired-7.org/favicon.ico")));
 
         setBoards(
                 Board.fromSiteNameCode(this, "Lewds & +18", "18"),
@@ -109,14 +119,14 @@ public class Wired7 extends CommonSite {
         setEndpoints(new VichanEndpoints(this,
                 "https://wired-7.org",
                 "https://wired-7.org"));
-        setActions(new Wired7Actions(this));
+        setActions(new Wired7Actions(okHttpClient, this));
         setApi(new VichanApi(this));
-        setParser(new VichanCommentParser());
+        setParser(themeHelper, new VichanCommentParser(), commentParserHelper);
     }
 
     private static class Wired7Actions extends VichanActions {
-        Wired7Actions(CommonSite commonSite) {
-            super(commonSite);
+        Wired7Actions(OkHttpClient okHttpClient, CommonSite commonSite) {
+            super(okHttpClient, commonSite);
         }
 
         @Override

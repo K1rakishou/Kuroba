@@ -37,6 +37,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.controller.Controller;
 import com.github.adamantcheese.chan.core.database.DatabaseManager;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.manager.FilterEngine;
 import com.github.adamantcheese.chan.core.manager.FilterEngine.FilterAction;
 import com.github.adamantcheese.chan.core.manager.FilterType;
@@ -58,7 +59,6 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.fixSnackbarText;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAttrColor;
 
@@ -67,9 +67,10 @@ public class FiltersController extends Controller implements
         View.OnClickListener {
     @Inject
     DatabaseManager databaseManager;
-
     @Inject
     FilterEngine filterEngine;
+    @Inject
+    ThemeHelper themeHelper;
 
     private RecyclerView recyclerView;
     private FloatingActionButton add;
@@ -111,9 +112,13 @@ public class FiltersController extends Controller implements
     }
 
     @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
+    }
+
+    @Override
     public void onCreate() {
         super.onCreate();
-        inject(this);
 
         view = inflateRes(R.layout.controller_filters);
 
@@ -136,11 +141,11 @@ public class FiltersController extends Controller implements
 
         add = view.findViewById(R.id.add);
         add.setOnClickListener(this);
-        ThemeHelper.getTheme().applyFabColor(add);
+        themeHelper.getTheme().applyFabColor(add);
 
         enable = view.findViewById(R.id.enable);
         enable.setOnClickListener(this);
-        ThemeHelper.getTheme().applyFabColor(enable);
+        themeHelper.getTheme().applyFabColor(enable);
     }
 
     @Override
@@ -172,7 +177,7 @@ public class FiltersController extends Controller implements
                 AndroidUtils.runOnUiThread(() -> setFilters(enabledFilters, false));
                 enableButton.setImageResource(R.drawable.ic_done_white_24dp);
             }
-            ThemeHelper.getTheme().applyFabColor(enable);
+            themeHelper.getTheme().applyFabColor(enable);
         }
     }
 
@@ -231,7 +236,7 @@ public class FiltersController extends Controller implements
                     } else {
                         enable.setImageResource(R.drawable.ic_clear_white_24dp);
                     }
-                    ThemeHelper.getTheme().applyFabColor(enable);
+                    themeHelper.getTheme().applyFabColor(enable);
                     EventBus.getDefault().post(new RefreshUIMessage("filters"));
                     adapter.reload();
                 })

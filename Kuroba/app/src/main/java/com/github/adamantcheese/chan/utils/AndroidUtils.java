@@ -24,6 +24,7 @@ import android.app.Dialog;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -56,6 +57,8 @@ import androidx.browser.customtabs.CustomTabsIntent;
 
 import com.github.adamantcheese.chan.BuildConfig;
 import com.github.adamantcheese.chan.R;
+import com.github.adamantcheese.chan.StartActivity;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -151,7 +154,7 @@ public class AndroidUtils {
         }
     }
 
-    public static void openLinkInBrowser(Activity activity, String link) {
+    public static void openLinkInBrowser(Activity activity, ThemeHelper themeHelper, String link) {
         // Hack that's sort of the same as openLink
         // The link won't be opened in a custom tab if this app is the default handler for that link.
         // Manually check if this app opens it instead of a custom tab, and use the logic of
@@ -166,7 +169,7 @@ public class AndroidUtils {
 
         if (openWithCustomTabs) {
             CustomTabsIntent tabsIntent = new CustomTabsIntent.Builder()
-                    .setToolbarColor(ThemeHelper.getTheme().primaryColor.color)
+                    .setToolbarColor(themeHelper.getTheme().primaryColor.color)
                     .build();
             try {
                 tabsIntent.launchUrl(activity, Uri.parse(link));
@@ -465,5 +468,18 @@ public class AndroidUtils {
         WindowManager windowManager = (WindowManager) application.getSystemService(Activity.WINDOW_SERVICE);
         windowManager.getDefaultDisplay().getSize(displaySize);
         return displaySize;
+    }
+
+    public static StartActivityComponent extractStartActivityComponent(Context context) {
+        if (context instanceof StartActivity) {
+            return ((StartActivity) context).getComponent();
+        } else if (context instanceof ContextWrapper) {
+            return ((StartActivity) ((ContextWrapper) context)
+                    .getBaseContext())
+                    .getComponent();
+        } else {
+            throw new IllegalStateException(
+                    "Unknown context wrapper " + context.getClass().getName());
+        }
     }
 }

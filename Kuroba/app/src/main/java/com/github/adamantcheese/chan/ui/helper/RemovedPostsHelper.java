@@ -20,28 +20,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-
-import static com.github.adamantcheese.chan.Chan.inject;
-
 public class RemovedPostsHelper {
     private final String TAG = "RemovedPostsHelper";
 
-    @Inject
-    DatabaseManager databaseManager;
-
+    private DatabaseManager databaseManager;
     private Context context;
     private ThreadPresenter presenter;
     private RemovedPostsCallbacks callbacks;
     private @Nullable
     RemovedPostsController controller;
 
-    public RemovedPostsHelper(Context context, ThreadPresenter presenter, RemovedPostsCallbacks callbacks) {
+    public RemovedPostsHelper(
+            Context context,
+            DatabaseManager databaseManager,
+            ThreadPresenter presenter,
+            RemovedPostsCallbacks callbacks
+    ) {
         this.context = context;
+        this.databaseManager = databaseManager;
         this.presenter = presenter;
         this.callbacks = callbacks;
-
-        inject(this);
     }
 
     public void showPosts(List<Post> threadPosts, int threadNo) {

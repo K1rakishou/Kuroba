@@ -35,21 +35,38 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import javax.inject.Inject;
-
-import static com.github.adamantcheese.chan.Chan.inject;
-
 public class DatabaseLoadableManager {
     private static final String TAG = "DatabaseLoadableManager";
 
-    @Inject
-    DatabaseHelper helper;
+    private DatabaseHelper helper;
+    private DatabaseManager databaseManager;
+    private SiteRepository siteRepository;
 
     // Uhhh, should this really be like this?
     private Map<Loadable, Loadable> cachedLoadables = new HashMap<>();
 
-    public DatabaseLoadableManager() {
-        inject(this);
+    public DatabaseLoadableManager(
+            DatabaseHelper databaseHelper,
+            DatabaseManager databaseManager
+    ) {
+        this.helper = databaseHelper;
+        this.databaseManager = databaseManager;
+    }
+
+    /**
+     * We have to do this to prevent dependency cycle. SiteRepository depends on DatabaseManager
+     * which depends on SiteRepository
+     * */
+    private SiteRepository getSiteRepository() {
+        if (siteRepository == null) {
+            synchronized (this) {
+                if (siteRepository == null) {
+                    siteRepository = Chan.getComponent().getSiteRepository();
+                }
+            }
+        }
+
+        return siteRepository;
     }
 
     /**
@@ -93,7 +110,7 @@ public class DatabaseLoadableManager {
 
         // We only cache THREAD loadables in the db
         if (loadable.isThreadMode()) {
-            return Chan.injector().provider(DatabaseManager.class).get().runTask(getLoadable(loadable));
+            return databaseManager.runTask(getLoadable(loadable));
         } else {
             return loadable;
         }
@@ -121,7 +138,7 @@ public class DatabaseLoadableManager {
 
         // Add it to the cache, refresh contents
         helper.loadableDao.refresh(loadable);
-        loadable.site = Chan.injector().instance(SiteRepository.class).forId(loadable.siteId);
+        loadable.site = getSiteRepository().forId(loadable.siteId);
         loadable.board = loadable.site.board(loadable.boardCode);
         cachedLoadables.put(loadable, loadable);
         return loadable;
@@ -160,7 +177,7 @@ public class DatabaseLoadableManager {
                     result = loadable;
                 } else {
                     Log.d(TAG, "Loadable found in db");
-                    result.site = Chan.injector().instance(SiteRepository.class).forId(result.siteId);
+                    result.site = getSiteRepository().forId(result.siteId);
                     result.board = result.site.board(result.boardCode);
                 }
 

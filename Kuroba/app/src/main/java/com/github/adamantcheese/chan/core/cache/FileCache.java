@@ -19,6 +19,7 @@ package com.github.adamantcheese.chan.core.cache;
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 
+import com.github.adamantcheese.chan.core.di.module.application.NetModule;
 import com.github.adamantcheese.chan.core.manager.ThreadSaveManager;
 import com.github.adamantcheese.chan.core.model.PostImage;
 import com.github.adamantcheese.chan.core.model.orm.Loadable;
@@ -45,11 +46,17 @@ public class FileCache implements FileCacheDownloader.Callback {
     private final ExecutorService downloadPool = Executors.newCachedThreadPool();
     private final CacheHandler cacheHandler;
     private final FileManager fileManager;
+    private final NetModule.ProxiedOkHttpClient proxiedOkHttpClient;
 
     private List<FileCacheDownloader> downloaders = new ArrayList<>();
 
-    public FileCache(File cacheDir, FileManager fileManager) {
+    public FileCache(
+            File cacheDir,
+            FileManager fileManager,
+            NetModule.ProxiedOkHttpClient proxiedOkHttpClient
+    ) {
         this.fileManager = fileManager;
+        this.proxiedOkHttpClient = proxiedOkHttpClient;
 
         RawFile cacheDirFile = fileManager.fromRawFile(
                 new File(cacheDir, FILE_CACHE_DIR));
@@ -68,7 +75,8 @@ public class FileCache implements FileCacheDownloader.Callback {
     public FileCacheDownloader downloadFile(
             Loadable loadable,
             @NonNull PostImage postImage,
-            FileCacheListener listener) {
+            FileCacheListener listener
+    ) {
         if (loadable.isLocal()) {
             String filename = ThreadSaveManager.formatOriginalImageName(
                     postImage.serverFilename,
@@ -213,8 +221,13 @@ public class FileCache implements FileCacheDownloader.Callback {
             FileCacheListener listener, RawFile file, String url) {
         BackgroundUtils.ensureMainThread();
 
-        FileCacheDownloader downloader =
-                new FileCacheDownloader(fileManager, this, file, url);
+        FileCacheDownloader downloader = new FileCacheDownloader(
+                fileManager,
+                proxiedOkHttpClient,
+                file,
+                this,
+                url
+        );
 
         if (listener != null) {
             downloader.addListener(listener);

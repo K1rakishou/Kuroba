@@ -64,6 +64,7 @@ import com.github.adamantcheese.chan.ui.helper.PostHelper;
 import com.github.adamantcheese.chan.ui.layout.ArchivesLayout;
 import com.github.adamantcheese.chan.ui.layout.ThreadListLayout;
 import com.github.adamantcheese.chan.ui.settings.base_directory.LocalThreadsBaseDirectory;
+import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 import com.github.adamantcheese.chan.ui.view.FloatingMenuItem;
 import com.github.adamantcheese.chan.ui.view.ThumbnailView;
 import com.github.adamantcheese.chan.utils.AndroidUtils;
@@ -111,12 +112,16 @@ public class ThreadPresenter implements ChanThreadLoader.ChanLoaderCallback,
     private static final int POST_OPTION_EXTRA = 15;
     private static final int POST_OPTION_REMOVE = 16;
 
+    private final Context applicationContext;
     private final WatchManager watchManager;
     private final DatabaseManager databaseManager;
     private final ChanLoaderFactory chanLoaderFactory;
     private final PageRequestManager pageRequestManager;
     private final ThreadSaveManager threadSaveManager;
     private final FileManager fileManager;
+    private final FileCache fileCache;
+    private final FilterWatchManager filterWatchManager;
+    private final ThemeHelper themeHelper;
 
     private ThreadPresenterCallback threadPresenterCallback;
     private Loadable loadable;
@@ -130,19 +135,28 @@ public class ThreadPresenter implements ChanThreadLoader.ChanLoaderCallback,
     private Context context;
 
     @Inject
-    public ThreadPresenter(WatchManager watchManager,
-                           DatabaseManager databaseManager,
-                           ChanLoaderFactory chanLoaderFactory,
-                           PageRequestManager pageRequestManager,
-                           ThreadSaveManager threadSaveManager,
-                           FileManager fileManager
+    public ThreadPresenter(
+            Context applicationContext,
+            WatchManager watchManager,
+            DatabaseManager databaseManager,
+            ChanLoaderFactory chanLoaderFactory,
+            PageRequestManager pageRequestManager,
+            ThreadSaveManager threadSaveManager,
+            FileManager fileManager,
+            FileCache fileCache,
+            FilterWatchManager filterWatchManager,
+            ThemeHelper themeHelper
     ) {
+        this.applicationContext = applicationContext;
         this.watchManager = watchManager;
         this.databaseManager = databaseManager;
         this.chanLoaderFactory = chanLoaderFactory;
         this.pageRequestManager = pageRequestManager;
         this.threadSaveManager = threadSaveManager;
         this.fileManager = fileManager;
+        this.fileCache = fileCache;
+        this.filterWatchManager = filterWatchManager;
+        this.themeHelper = themeHelper;
     }
 
     public void create(ThreadPresenterCallback threadPresenterCallback) {
@@ -536,20 +550,19 @@ public class ThreadPresenter implements ChanThreadLoader.ChanLoaderCallback,
             }
 
             if (ChanSettings.autoLoadThreadImages.get() && !loadable.isLocal()) {
-                FileCache cache = Chan.injector().instance(FileCache.class);
                 for (Post p : result.getPostsUnsafe()) {
                     if (p.images != null) {
                         for (PostImage postImage : p.images) {
-                            if (cache.exists(postImage.imageUrl.toString())) {
+                            if (fileCache.exists(postImage.imageUrl.toString())) {
                                 continue;
                             }
 
                             if ((postImage.type == PostImage.Type.STATIC || postImage.type == PostImage.Type.GIF)
                                     && shouldLoadForNetworkType(ChanSettings.imageAutoLoadNetwork.get())) {
-                                cache.downloadFile(loadable, postImage, null);
+                                fileCache.downloadFile(loadable, postImage, null);
                             } else if (postImage.type == PostImage.Type.MOVIE &&
                                     shouldLoadForNetworkType(ChanSettings.videoAutoLoadNetwork.get())) {
-                                cache.downloadFile(loadable, postImage, null);
+                                fileCache.downloadFile(loadable, postImage, null);
                             }
                         }
                     }
@@ -593,7 +606,7 @@ public class ThreadPresenter implements ChanThreadLoader.ChanLoaderCallback,
         }
 
         if (ChanSettings.watchFilterWatch.get() && result.getLoadable().isCatalogMode()) {
-            Chan.injector().instance(FilterWatchManager.class).onCatalogLoad(result);
+            filterWatchManager.onCatalogLoad(result);
         }
     }
 
@@ -1047,9 +1060,13 @@ public class ThreadPresenter implements ChanThreadLoader.ChanLoaderCallback,
 
     @Override
     public boolean isWatching() {
-        return loadable.isThreadMode() && ChanSettings.autoRefreshThread.get() &&
-                ((Chan) Chan.injector().instance(Context.class)).getApplicationInForeground() && chanLoader != null && chanLoader.getThread() != null &&
-                !chanLoader.getThread().isClosed() && !chanLoader.getThread().isArchived();
+        return loadable.isThreadMode()
+                && ChanSettings.autoRefreshThread.get()
+                && ((Chan) applicationContext).getApplicationInForeground()
+                && chanLoader != null
+                && chanLoader.getThread() != null
+                && !chanLoader.getThread().isClosed()
+                && !chanLoader.getThread().isArchived();
     }
 
     @Nullable
@@ -1197,7 +1214,13 @@ public class ThreadPresenter implements ChanThreadLoader.ChanLoaderCallback,
 
     private void showPosts() {
         if (chanLoader != null && chanLoader.getThread() != null) {
-            threadPresenterCallback.showPosts(chanLoader.getThread(), new PostsFilter(order, searchQuery));
+            PostsFilter postsFilter = new PostsFilter(
+                    databaseManager,
+                    order,
+                    searchQuery
+            );
+
+            threadPresenterCallback.showPosts(chanLoader.getThread(), postsFilter);
         }
     }
 
@@ -1271,7 +1294,7 @@ public class ThreadPresenter implements ChanThreadLoader.ChanLoaderCallback,
         Post tempOP = new Post.Builder().board(loadable.board).id(loadable.no).opId(loadable.no).setUnixTimestampSeconds(1).comment("").build();
         String link = loadable.site.resolvable().desktopUrl(loadable, tempOP);
         link = link.replace("https://boards.4chan.org/", "https://" + domainNamePair.second + "/");
-        AndroidUtils.openLinkInBrowser((Activity) context, link);
+        AndroidUtils.openLinkInBrowser((Activity) context, themeHelper, link);
     }
 
     public void setContext(Context context) {

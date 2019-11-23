@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.core.database.DatabaseManager;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.settings.ChanSettings;
 import com.github.adamantcheese.chan.ui.helper.RefreshUIMessage;
 import com.github.adamantcheese.chan.ui.settings.BooleanSettingView;
@@ -32,11 +33,20 @@ import com.github.adamantcheese.chan.ui.settings.StringSettingView;
 
 import org.greenrobot.eventbus.EventBus;
 
-import static com.github.adamantcheese.chan.Chan.injector;
+import javax.inject.Inject;
 
 public class BehaviourSettingsController extends SettingsController {
+
+    @Inject
+    DatabaseManager databaseManager;
+
     public BehaviourSettingsController(Context context) {
         super(context);
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     @Override
@@ -172,7 +182,6 @@ public class BehaviourSettingsController extends SettingsController {
     private void setupClearThreadHidesSetting(SettingsGroup post) {
         post.add(new LinkSettingView(this, R.string.setting_clear_thread_hides, 0, v -> {
             // TODO: don't do this here.
-            DatabaseManager databaseManager = injector().instance(DatabaseManager.class);
             databaseManager.runTask(
                     databaseManager.getDatabaseHideManager().clearAllThreadHides());
             Toast.makeText(context, R.string.setting_cleared_thread_hides, Toast.LENGTH_LONG)

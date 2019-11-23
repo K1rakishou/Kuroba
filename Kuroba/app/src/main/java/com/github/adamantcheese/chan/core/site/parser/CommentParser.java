@@ -65,8 +65,10 @@ public class CommentParser {
     private Pattern boardLinkPattern8Chan = Pattern.compile("/(.*?)/index.html");
     private Pattern boardSearchPattern = Pattern.compile("//boards\\.4chan.*?\\.org/(.*?)/catalog#s=(.*)");
     private Pattern colorPattern = Pattern.compile("color:#([0-9a-fA-F]+)");
-
     private Map<String, List<StyleRule>> rules = new HashMap<>();
+
+    private ArchivesManager archivesManager;
+    private CommentParserHelper commentParserHelper;
 
     public CommentParser() {
         // Required tags.
@@ -129,7 +131,7 @@ public class CommentParser {
                 boolean highPriority = i == 0;
                 for (StyleRule rule : rules) {
                     if (rule.highPriority() == highPriority && rule.applies(element)) {
-                        return rule.apply(theme, callback, post, text, element);
+                        return rule.apply(theme, callback, post, text, element, getCommentParserHelper());
                     }
                 }
             }
@@ -246,7 +248,7 @@ public class CommentParser {
                                    Element deadlink) {
         // html looks like <span class="deadlink">&gt;&gt;number</span>
         int postNo = Integer.parseInt(Parser.unescapeEntities(deadlink.text(), true).substring(2));
-        List<ArchivesLayout.PairForAdapter> boards = Chan.injector().instance(ArchivesManager.class).domainsForBoard(builder.board);
+        List<ArchivesLayout.PairForAdapter> boards = getArchivesManager().domainsForBoard(builder.board);
         if (!boards.isEmpty() && builder.op) {
             //only allow deadlinks to be parsed in the OP, as they are likely previous thread links
             //if a deadlink appears in a regular post that is likely to be a dead post link, we are unable to link to an archive
@@ -339,6 +341,39 @@ public class CommentParser {
         }
 
         return result;
+    }
+
+
+    /**
+     * FIXME: circular dependency resolution hack
+     * We have to do this to prevent dependency cycle.
+     * */
+    private ArchivesManager getArchivesManager() {
+        if (archivesManager == null) {
+            synchronized (this) {
+                if (archivesManager == null) {
+                    archivesManager = Chan.getComponent().getArchivesManager();
+                }
+            }
+        }
+
+        return archivesManager;
+    }
+
+    /**
+     * FIXME: circular dependency resolution hack
+     * We have to do this to prevent dependency cycle.
+     * */
+    private CommentParserHelper getCommentParserHelper() {
+        if (commentParserHelper == null) {
+            synchronized (this) {
+                if (commentParserHelper == null) {
+                    commentParserHelper = Chan.getComponent().getCommentParserHelper();
+                }
+            }
+        }
+
+        return commentParserHelper;
     }
 
     public class Link {

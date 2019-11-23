@@ -27,6 +27,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.github.adamantcheese.chan.R;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.model.Post;
 import com.github.adamantcheese.chan.core.model.PostImage;
 import com.github.adamantcheese.chan.core.model.orm.Loadable;
@@ -40,20 +41,28 @@ import com.github.adamantcheese.chan.ui.view.ThumbnailView;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 public class PostRepliesController extends BaseFloatingController {
     private PostPopupHelper postPopupHelper;
     private ThreadPresenter presenter;
-
     private boolean first = true;
-
     private LoadView loadView;
     private ListView listView;
     private PostPopupHelper.RepliesData displayingData;
+
+    @Inject
+    ThemeHelper themeHelper;
 
     public PostRepliesController(Context context, PostPopupHelper postPopupHelper, ThreadPresenter presenter) {
         super(context);
         this.postPopupHelper = postPopupHelper;
         this.presenter = presenter;
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     @Override
@@ -127,8 +136,8 @@ public class PostRepliesController extends BaseFloatingController {
         View repliesClose = dataView.findViewById(R.id.replies_close);
         repliesClose.setOnClickListener(v -> postPopupHelper.popAll());
 
-        Drawable backDrawable = ThemeHelper.getTheme().backDrawable.makeDrawable(context);
-        Drawable doneDrawable = ThemeHelper.getTheme().doneDrawable.makeDrawable(context);
+        Drawable backDrawable = themeHelper.getTheme().backDrawable.makeDrawable(context);
+        Drawable doneDrawable = themeHelper.getTheme().doneDrawable.makeDrawable(context);
 
         TextView repliesBackText = dataView.findViewById(R.id.replies_back_icon);
         TextView repliesCloseText = dataView.findViewById(R.id.replies_close_icon);
@@ -158,7 +167,7 @@ public class PostRepliesController extends BaseFloatingController {
                         showDivider,
                         ChanSettings.PostViewMode.LIST,
                         false,
-                        ThemeHelper.getTheme());
+                        themeHelper.getTheme());
 
                 return (View) postCell;
             }

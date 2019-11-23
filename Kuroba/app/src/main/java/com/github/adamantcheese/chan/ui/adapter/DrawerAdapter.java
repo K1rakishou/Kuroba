@@ -52,7 +52,6 @@ import com.github.adamantcheese.chan.utils.StringUtils;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAttrColor;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.setRoundItemBackground;
@@ -73,6 +72,8 @@ public class DrawerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
     @Inject
     WatchManager watchManager;
+    @Inject
+    ThemeHelper themeHelper;
 
     private Context context;
     private Drawable downloadIconOutline;
@@ -83,13 +84,14 @@ public class DrawerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     private Bitmap archivedIcon;
 
     public DrawerAdapter(Callback callback, Context context) {
-        inject(this);
         this.callback = callback;
         this.context = context;
+
+        AndroidUtils.extractStartActivityComponent(context).inject(this);
         setHasStableIds(true);
 
         downloadIconOutline = context.getDrawable(R.drawable.ic_download_anim0).mutate();
-        downloadIconOutline.setTint(ThemeHelper.getTheme().textPrimary);
+        downloadIconOutline.setTint(themeHelper.getTheme().textPrimary);
 
         downloadIconFilled = context.getDrawable(R.drawable.ic_download_anim1).mutate();
         downloadIconFilled.setTint(Color.GRAY);
@@ -159,7 +161,7 @@ public class DrawerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             case TYPE_HEADER:
                 HeaderHolder headerHolder = (HeaderHolder) holder;
                 headerHolder.text.setText(R.string.drawer_pinned);
-                ThemeHelper.getTheme().clearDrawable.apply(headerHolder.clear);
+                themeHelper.getTheme().clearDrawable.apply(headerHolder.clear);
 
                 break;
             case TYPE_PIN:
@@ -173,11 +175,11 @@ public class DrawerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 switch (position) {
                     case 0:
                         linkHolder.text.setText(R.string.drawer_settings);
-                        ThemeHelper.getTheme().settingsDrawable.apply(linkHolder.image);
+                        themeHelper.getTheme().settingsDrawable.apply(linkHolder.image);
                         break;
                     case 1:
                         linkHolder.text.setText(R.string.drawer_history);
-                        ThemeHelper.getTheme().historyDrawable.apply(linkHolder.image);
+                        themeHelper.getTheme().historyDrawable.apply(linkHolder.image);
                         break;
                 }
                 break;
@@ -392,7 +394,7 @@ public class DrawerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
         if (!(holder.threadDownloadIcon.getDrawable() instanceof AnimatedVectorDrawableCompat)) {
             AnimatedVectorDrawableCompat downloadAnimation =
-                    AnimationUtils.createAnimatedDownloadIcon(context, ThemeHelper.getTheme().textPrimary);
+                    AnimationUtils.createAnimatedDownloadIcon(context, themeHelper.getTheme().textPrimary);
             holder.threadDownloadIcon.setImageDrawable(downloadAnimation);
 
             downloadAnimation.start();
@@ -419,9 +421,9 @@ public class DrawerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             image = itemView.findViewById(R.id.thumb);
             image.setCircular(true);
             textView = itemView.findViewById(R.id.text);
-            textView.setTypeface(ThemeHelper.getTheme().mainFont);
+            textView.setTypeface(themeHelper.getTheme().mainFont);
             watchCountText = itemView.findViewById(R.id.watch_count);
-            watchCountText.setTypeface(ThemeHelper.getTheme().mainFont);
+            watchCountText.setTypeface(themeHelper.getTheme().mainFont);
             threadDownloadIcon = itemView.findViewById(R.id.thread_download_icon);
 
             setRoundItemBackground(watchCountText);
@@ -456,7 +458,7 @@ public class DrawerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         private HeaderHolder(View itemView) {
             super(itemView);
             text = itemView.findViewById(R.id.text);
-            text.setTypeface(ThemeHelper.getTheme().mainFont);
+            text.setTypeface(themeHelper.getTheme().mainFont);
             clear = itemView.findViewById(R.id.clear);
             setRoundItemBackground(clear);
             clear.setOnClickListener(v -> callback.onHeaderClicked(HeaderAction.CLEAR));
@@ -479,7 +481,7 @@ public class DrawerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             super(itemView);
             image = itemView.findViewById(R.id.image);
             text = itemView.findViewById(R.id.text);
-            text.setTypeface(ThemeHelper.getTheme().mainFont);
+            text.setTypeface(themeHelper.getTheme().mainFont);
 
             itemView.setOnClickListener(v -> {
                 switch (getAdapterPosition()) {

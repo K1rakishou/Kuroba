@@ -35,9 +35,13 @@ import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.core.settings.ChanSettings;
 import com.github.adamantcheese.chan.ui.theme.ArrowMenuDrawable;
 import com.github.adamantcheese.chan.ui.theme.Theme;
+import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
+import com.github.adamantcheese.chan.utils.AndroidUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Inject;
 
 import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.hideKeyboard;
@@ -68,16 +72,16 @@ public class Toolbar extends LinearLayout implements
     };
 
     private ToolbarPresenter presenter;
-
     private ImageView arrowMenuView;
     private ArrowMenuDrawable arrowMenuDrawable;
-
     private ToolbarContainer navigationItemContainer;
-
     private ToolbarCallback callback;
     private int lastScrollDeltaOffset;
     private int scrollOffset;
     private List<ToolbarCollapseCallback> collapseCallbacks = new ArrayList<>();
+
+    @Inject
+    ThemeHelper themeHelper;
 
     public Toolbar(Context context) {
         this(context, null);
@@ -89,11 +93,12 @@ public class Toolbar extends LinearLayout implements
 
     public Toolbar(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+        AndroidUtils.extractStartActivityComponent(context).inject(this);
 
         setOrientation(HORIZONTAL);
         if (isInEditMode()) return;
 
-        presenter = new ToolbarPresenter(this);
+        presenter = new ToolbarPresenter(themeHelper, this);
 
         //initView
         FrameLayout leftButtonContainer = new FrameLayout(getContext());

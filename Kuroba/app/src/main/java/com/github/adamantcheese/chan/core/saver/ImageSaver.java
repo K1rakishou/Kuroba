@@ -135,9 +135,15 @@ public class ImageSaver implements ImageSaveTask.ImageSaveTaskCallback {
             return null;
         }
 
+        if (!fileManager.exists(baseSaveDir)) {
+            Logger.e(TAG, "getSaveLocation() baseDirectory does not exist! ("
+                    + baseSaveDir.getFullPath() + ")");
+            return null;
+        }
+
         AbstractFile createdBaseSaveDir = fileManager.create(baseSaveDir);
 
-        if (!fileManager.exists(baseSaveDir) || createdBaseSaveDir == null) {
+        if (createdBaseSaveDir == null) {
             Logger.e(TAG, "Couldn't create base image save directory");
             return null;
         }

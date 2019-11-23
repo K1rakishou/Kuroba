@@ -32,6 +32,7 @@ import com.github.adamantcheese.chan.core.site.common.vichan.VichanEndpoints;
 import okhttp3.HttpUrl;
 
 public class Arisuchan extends CommonSite {
+
     public static final CommonSiteUrlHandler URL_HANDLER = new CommonSiteUrlHandler() {
         @Override
         public Class<? extends Site> getSiteClass() {
@@ -66,7 +67,7 @@ public class Arisuchan extends CommonSite {
     @Override
     public void setup() {
         setName("Arisuchan");
-        setIcon(SiteIcon.fromFavicon(HttpUrl.parse("https://arisuchan.jp/favicon.ico")));
+        setIcon(SiteIcon.fromFavicon(imageLoaderV2, HttpUrl.parse("https://arisuchan.jp/favicon.ico")));
 
         setBoards(
                 Board.fromSiteNameCode(this, "technology", "tech"),
@@ -92,8 +93,8 @@ public class Arisuchan extends CommonSite {
         setEndpoints(new VichanEndpoints(this,
                 "https://arisuchan.jp",
                 "https://arisuchan.jp"));
-        setActions(new VichanActions(this));
+        setActions(new VichanActions(okHttpClient, this));
         setApi(new VichanApi(this));
-        setParser(new VichanCommentParser());
+        setParser(themeHelper, new VichanCommentParser(), commentParserHelper);
     }
 }

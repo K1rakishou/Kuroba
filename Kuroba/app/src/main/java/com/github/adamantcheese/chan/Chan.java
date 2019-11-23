@@ -22,21 +22,21 @@ import android.content.Context;
 import android.os.Bundle;
 
 import com.github.adamantcheese.chan.core.database.DatabaseManager;
-import com.github.adamantcheese.chan.core.di.AppModule;
-import com.github.adamantcheese.chan.core.di.DatabaseModule;
-import com.github.adamantcheese.chan.core.di.GsonModule;
-import com.github.adamantcheese.chan.core.di.ManagerModule;
-import com.github.adamantcheese.chan.core.di.NetModule;
-import com.github.adamantcheese.chan.core.di.RepositoryModule;
-import com.github.adamantcheese.chan.core.di.SiteModule;
-import com.github.adamantcheese.chan.core.manager.ArchivesManager;
+import com.github.adamantcheese.chan.core.di.component.application.ApplicationComponent;
+import com.github.adamantcheese.chan.core.di.component.application.DaggerApplicationComponent;
+import com.github.adamantcheese.chan.core.di.module.application.AppModule;
+import com.github.adamantcheese.chan.core.di.module.application.DatabaseModule;
+import com.github.adamantcheese.chan.core.di.module.application.GsonModule;
+import com.github.adamantcheese.chan.core.di.module.application.ManagerModule;
+import com.github.adamantcheese.chan.core.di.module.application.NetModule;
+import com.github.adamantcheese.chan.core.di.module.application.ParserModule;
+import com.github.adamantcheese.chan.core.di.module.application.RepositoryModule;
+import com.github.adamantcheese.chan.core.di.module.application.SiteModule;
 import com.github.adamantcheese.chan.core.manager.BoardManager;
-import com.github.adamantcheese.chan.core.manager.FilterWatchManager;
 import com.github.adamantcheese.chan.core.site.SiteService;
 import com.github.adamantcheese.chan.utils.AndroidUtils;
 import com.github.adamantcheese.chan.utils.Logger;
 
-import org.codejargon.feather.Feather;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
@@ -51,22 +51,15 @@ public class Chan extends Application implements Application.ActivityLifecycleCa
 
     @Inject
     DatabaseManager databaseManager;
-
     @Inject
     SiteService siteService;
-
     @Inject
     BoardManager boardManager;
 
-    private static Feather feather;
+    private static ApplicationComponent applicationComponent;
 
-    public static Feather injector() {
-        return feather;
-    }
-
-    public static <T> T inject(T instance) {
-        feather.injectFields(instance);
-        return instance;
+    public static ApplicationComponent getComponent() {
+        return applicationComponent;
     }
 
     @Override
@@ -80,25 +73,23 @@ public class Chan extends Application implements Application.ActivityLifecycleCa
         super.onCreate();
         registerActivityLifecycleCallbacks(this);
 
-        feather = Feather.with(
-                new AppModule(this),
-                new DatabaseModule(),
-                new NetModule(),
-                new GsonModule(),
-                new RepositoryModule(),
-                new SiteModule(),
-                new ManagerModule()
-        );
-        feather.injectFields(this);
+        applicationComponent = DaggerApplicationComponent.builder()
+                .application(this)
+                .appContext(this)
+                .appModule(new AppModule())
+                .databaseModule(new DatabaseModule())
+                .gsonModule(new GsonModule())
+                .managerModule(new ManagerModule())
+                .netModule(new NetModule())
+                .repositoryModule(new RepositoryModule())
+                .siteModule(new SiteModule())
+                .parserModule(new ParserModule())
+                .build();
+        applicationComponent.inject(this);
 
         siteService.initialize();
         boardManager.initialize();
         databaseManager.initializeAndTrim();
-
-        //create these classes here even if they aren't explicitly used, so they do their background startup tasks
-        //and so that they're available for feather later on for archives/filter watch waking
-        feather.instance(ArchivesManager.class);
-        feather.instance(FilterWatchManager.class);
 
         RxJavaPlugins.setErrorHandler(e -> {
             if (e instanceof UndeliverableException) {

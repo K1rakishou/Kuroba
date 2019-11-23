@@ -33,18 +33,11 @@ import com.github.k1rakishou.fsaf.file.RawFile;
 import java.io.File;
 import java.io.IOException;
 
-import javax.inject.Inject;
-
-import static com.github.adamantcheese.chan.Chan.inject;
-
 public class ImageSaveTask extends FileCacheListener implements Runnable {
     private static final String TAG = "ImageSaveTask";
 
-    @Inject
-    FileCache fileCache;
-    @Inject
-    FileManager fileManager;
-
+    private FileCache fileCache;
+    private FileManager fileManager;
     private PostImage postImage;
     private Loadable loadable;
     private ImageSaveTaskCallback callback;
@@ -54,8 +47,14 @@ public class ImageSaveTask extends FileCacheListener implements Runnable {
 
     private boolean success = false;
 
-    public ImageSaveTask(Loadable loadable, PostImage postImage) {
-        inject(this);
+    public ImageSaveTask(
+            FileCache fileCache,
+            FileManager fileManager,
+            Loadable loadable,
+            PostImage postImage
+    ) {
+        this.fileCache = fileCache;
+        this.fileManager = fileManager;
         this.loadable = loadable;
         this.postImage = postImage;
     }

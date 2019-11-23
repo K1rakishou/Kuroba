@@ -28,11 +28,13 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.controller.Controller;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.model.Archive;
 import com.github.adamantcheese.chan.core.model.orm.Board;
 import com.github.adamantcheese.chan.core.model.orm.Loadable;
 import com.github.adamantcheese.chan.core.presenter.ArchivePresenter;
 import com.github.adamantcheese.chan.ui.helper.BoardHelper;
+import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 import com.github.adamantcheese.chan.ui.toolbar.ToolbarMenuItem;
 import com.github.adamantcheese.chan.ui.view.CrossfadeView;
 import com.github.adamantcheese.chan.ui.view.DividerItemDecoration;
@@ -43,8 +45,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
-
 public class ArchiveController extends Controller implements ArchivePresenter.Callback,
         ToolbarNavigationController.ToolbarSearchCallback,
         SwipeRefreshLayout.OnRefreshListener {
@@ -52,16 +52,21 @@ public class ArchiveController extends Controller implements ArchivePresenter.Ca
     private SwipeRefreshLayout swipeRefreshLayout;
     private View progress;
     private View errorView;
+    private ArchiveAdapter adapter;
+    private Board board;
 
     @Inject
-    private ArchivePresenter presenter;
-
-    private ArchiveAdapter adapter;
-
-    private Board board;
+    ArchivePresenter presenter;
+    @Inject
+    ThemeHelper themeHelper;
 
     public ArchiveController(Context context) {
         super(context);
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     public void setBoard(Board board) {
@@ -71,7 +76,6 @@ public class ArchiveController extends Controller implements ArchivePresenter.Ca
     @Override
     public void onCreate() {
         super.onCreate();
-        inject(this);
 
         // Inflate
         view = inflateRes(R.layout.controller_archive);
@@ -97,7 +101,7 @@ public class ArchiveController extends Controller implements ArchivePresenter.Ca
         archiveRecyclerview.setAdapter(adapter);
         archiveRecyclerview.addItemDecoration(
                 new DividerItemDecoration(context, DividerItemDecoration.VERTICAL));
-        FastScrollerHelper.create(archiveRecyclerview);
+        FastScrollerHelper.create(themeHelper, archiveRecyclerview);
         crossfadeView.toggle(false, false);
         swipeRefreshLayout.setOnRefreshListener(this);
 

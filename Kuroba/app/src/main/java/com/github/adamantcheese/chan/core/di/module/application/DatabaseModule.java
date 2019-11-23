@@ -14,37 +14,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.github.adamantcheese.chan.core.di;
+package com.github.adamantcheese.chan.core.di.module.application;
 
+import android.content.Context;
+
+import com.github.adamantcheese.chan.core.database.DatabaseHelper;
 import com.github.adamantcheese.chan.core.database.DatabaseManager;
-import com.github.adamantcheese.chan.core.repository.SiteRepository;
-import com.github.adamantcheese.chan.core.site.SiteResolver;
-import com.github.adamantcheese.chan.core.site.SiteService;
 import com.github.adamantcheese.chan.utils.Logger;
-
-import org.codejargon.feather.Provides;
+import com.github.k1rakishou.fsaf.FileManager;
+import com.google.gson.Gson;
 
 import javax.inject.Singleton;
 
-public class SiteModule {
+import dagger.Module;
+import dagger.Provides;
+
+@Module
+public class DatabaseModule {
 
     @Provides
     @Singleton
-    public SiteResolver provideSiteResolver(
-            SiteRepository siteRepository,
-            DatabaseManager databaseManager
-    ) {
-        Logger.d(AppModule.DI_TAG, "Site resolver");
-        return new SiteResolver(siteRepository, databaseManager);
+    public DatabaseHelper provideDatabaseHelper(Context applicationContext, Gson gson) {
+        Logger.d(AppModule.DI_TAG, "Database helper");
+        return new DatabaseHelper(applicationContext, gson);
     }
 
     @Provides
     @Singleton
-    public SiteService provideSiteService(
-            SiteRepository siteRepository,
-            SiteResolver siteResolver
+    public DatabaseManager provideDatabaseManager(
+            FileManager fileManager,
+            DatabaseHelper databaseHelper
     ) {
-        Logger.d(AppModule.DI_TAG, "Site service");
-        return new SiteService(siteRepository, siteResolver);
+        Logger.d(AppModule.DI_TAG, "Database manager");
+        return new DatabaseManager(fileManager, databaseHelper);
     }
 }

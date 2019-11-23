@@ -22,6 +22,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.ImageLoader.ImageListener;
 import com.github.adamantcheese.chan.R;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.image.ImageLoaderV2;
 import com.github.adamantcheese.chan.core.model.Post;
 import com.github.adamantcheese.chan.core.model.PostImage;
@@ -36,13 +37,13 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
-
 public class RemovedPostsController extends BaseFloatingController implements View.OnClickListener {
     private static final String TAG = "RemovedPostsController";
 
     @Inject
     ImageLoaderV2 imageLoaderV2;
+    @Inject
+    ThemeHelper themeHelper;
 
     private RemovedPostsHelper removedPostsHelper;
 
@@ -56,11 +57,15 @@ public class RemovedPostsController extends BaseFloatingController implements Vi
 
     public RemovedPostsController(
             Context context,
-            RemovedPostsHelper removedPostsHelper) {
+            RemovedPostsHelper removedPostsHelper
+    ) {
         super(context);
         this.removedPostsHelper = removedPostsHelper;
+    }
 
-        inject(this);
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     @Override
@@ -76,8 +81,8 @@ public class RemovedPostsController extends BaseFloatingController implements Vi
         restorePostsButton.setOnClickListener(this);
         selectAllButton.setOnClickListener(this);
 
-        selectAllButton.setBackgroundColor(ColorUtils.setAlphaComponent(ThemeHelper.getTheme().textPrimary, 32));
-        restorePostsButton.setBackgroundColor(ColorUtils.setAlphaComponent(ThemeHelper.getTheme().textPrimary, 32));
+        selectAllButton.setBackgroundColor(ColorUtils.setAlphaComponent(themeHelper.getTheme().textPrimary, 32));
+        restorePostsButton.setBackgroundColor(ColorUtils.setAlphaComponent(themeHelper.getTheme().textPrimary, 32));
     }
 
     @Override
@@ -106,6 +111,7 @@ public class RemovedPostsController extends BaseFloatingController implements Vi
         if (adapter == null) {
             adapter = new RemovedPostAdapter(
                     context,
+                    themeHelper,
                     imageLoaderV2,
                     R.layout.layout_removed_posts);
 
@@ -177,10 +183,18 @@ public class RemovedPostsController extends BaseFloatingController implements Vi
 
     public static class RemovedPostAdapter extends ArrayAdapter<RemovedPost> {
         private ImageLoaderV2 imageLoaderV2;
+        private ThemeHelper themeHelper;
         private List<RemovedPost> removedPostsCopy = new ArrayList<>();
 
-        public RemovedPostAdapter(@NonNull Context context, ImageLoaderV2 imageLoaderV2, int resource) {
+        public RemovedPostAdapter(
+                @NonNull Context context,
+                ThemeHelper themeHelper,
+                ImageLoaderV2 imageLoaderV2,
+                int resource
+        ) {
             super(context, resource);
+
+            this.themeHelper = themeHelper;
             this.imageLoaderV2 = imageLoaderV2;
         }
 
@@ -210,8 +224,8 @@ public class RemovedPostsController extends BaseFloatingController implements Vi
             postNo.setText(String.format("No. %d", removedPost.postNo));
             postComment.setText(removedPost.comment);
             checkbox.setChecked(removedPost.isChecked());
-            checkbox.setButtonTintList(ColorStateList.valueOf(ThemeHelper.getTheme().textPrimary));
-            checkbox.setTextColor(ColorStateList.valueOf(ThemeHelper.getTheme().textPrimary));
+            checkbox.setButtonTintList(ColorStateList.valueOf(themeHelper.getTheme().textPrimary));
+            checkbox.setTextColor(ColorStateList.valueOf(themeHelper.getTheme().textPrimary));
 
             if (removedPost.images.size() > 0) {
                 // load only the first image

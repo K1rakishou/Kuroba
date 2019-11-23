@@ -36,6 +36,8 @@ import com.github.adamantcheese.chan.utils.AndroidUtils;
 import com.github.adamantcheese.chan.utils.IOUtils;
 import com.github.adamantcheese.chan.utils.Logger;
 
+import javax.inject.Inject;
+
 public class CaptchaLayout extends WebView implements AuthenticationLayoutInterface {
     private static final String TAG = "CaptchaLayout";
 
@@ -43,6 +45,9 @@ public class CaptchaLayout extends WebView implements AuthenticationLayoutInterf
     private boolean loaded = false;
     private String baseUrl;
     private String siteKey;
+
+    @Inject
+    ThemeHelper themeHelper;
 
     public CaptchaLayout(Context context) {
         super(context);
@@ -54,6 +59,8 @@ public class CaptchaLayout extends WebView implements AuthenticationLayoutInterf
 
     public CaptchaLayout(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+
+        AndroidUtils.extractStartActivityComponent(context).inject(this);
     }
 
     /**
@@ -115,7 +122,7 @@ public class CaptchaLayout extends WebView implements AuthenticationLayoutInterf
 
         String html = IOUtils.assetAsString(getContext(), "captcha/captcha2.html");
         html = html.replace("__site_key__", siteKey);
-        html = html.replace("__theme__", ThemeHelper.getTheme().isLightTheme ? "light" : "dark");
+        html = html.replace("__theme__", themeHelper.getTheme().isLightTheme ? "light" : "dark");
 
         loadDataWithBaseURL(baseUrl, html, "text/html", "UTF-8", null);
     }

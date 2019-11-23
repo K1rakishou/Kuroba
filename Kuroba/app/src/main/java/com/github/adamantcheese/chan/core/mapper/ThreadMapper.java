@@ -6,26 +6,37 @@ import com.github.adamantcheese.chan.core.model.ChanThread;
 import com.github.adamantcheese.chan.core.model.Post;
 import com.github.adamantcheese.chan.core.model.orm.Loadable;
 import com.github.adamantcheese.chan.core.model.save.SerializableThread;
+import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 import com.github.adamantcheese.chan.utils.Logger;
+import com.google.gson.Gson;
 
 import java.util.List;
 
 public class ThreadMapper {
     private static final String TAG = "ThreadMapper";
 
-    public static SerializableThread toSerializableThread(List<Post> posts) {
+    public static SerializableThread toSerializableThread(
+            Gson gson,
+            List<Post> posts
+    ) {
         return new SerializableThread(
-                PostMapper.toSerializablePostList(posts)
+                PostMapper.toSerializablePostList(gson, posts)
         );
     }
 
     @Nullable
     public static ChanThread fromSerializedThread(
             Loadable loadable,
-            SerializableThread serializableThread) {
+            ThemeHelper themeHelper,
+            Gson gson,
+            SerializableThread serializableThread
+    ) {
         List<Post> posts = PostMapper.fromSerializedPostList(
                 loadable,
-                serializableThread.getPostList());
+                themeHelper,
+                gson,
+                serializableThread.getPostList()
+        );
 
         if (posts.isEmpty()) {
             Logger.w(TAG, "PostMapper.fromSerializedPostList returned empty list");

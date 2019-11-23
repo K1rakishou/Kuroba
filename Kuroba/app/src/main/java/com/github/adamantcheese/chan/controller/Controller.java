@@ -26,6 +26,7 @@ import android.view.ViewGroup;
 import com.github.adamantcheese.chan.StartActivity;
 import com.github.adamantcheese.chan.controller.transition.FadeInTransition;
 import com.github.adamantcheese.chan.controller.transition.FadeOutTransition;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.ui.controller.DoubleNavigationController;
 import com.github.adamantcheese.chan.ui.controller.ImageViewerNavigationController;
 import com.github.adamantcheese.chan.ui.toolbar.NavigationItem;
@@ -69,7 +70,13 @@ public abstract class Controller {
 
     public Controller(Context context) {
         this.context = context;
+        
+        injectDependencies(
+                AndroidUtils.extractStartActivityComponent(context)
+        );
     }
+
+    protected abstract void injectDependencies(StartActivityComponent component);
 
     public void onCreate() {
         alive = true;

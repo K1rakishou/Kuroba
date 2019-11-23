@@ -27,6 +27,7 @@ import com.github.adamantcheese.chan.controller.Controller;
 import com.github.adamantcheese.chan.controller.ControllerTransition;
 import com.github.adamantcheese.chan.controller.transition.PopControllerTransition;
 import com.github.adamantcheese.chan.controller.transition.PushControllerTransition;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.ui.layout.SplitNavigationControllerLayout;
 
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAttrColor;
@@ -68,6 +69,11 @@ public class SplitNavigationController extends Controller implements DoubleNavig
         container.build();
 
         setRightController(null);
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     @Override

@@ -22,21 +22,16 @@ import androidx.annotation.Nullable;
 import com.github.adamantcheese.chan.core.repository.ImportExportRepository;
 import com.github.k1rakishou.fsaf.file.ExternalFile;
 
-import javax.inject.Inject;
-
-import static com.github.adamantcheese.chan.Chan.inject;
-
 public class ImportExportSettingsPresenter {
     @Nullable
     private ImportExportSettingsCallbacks callbacks;
-
-    @Inject
-    ImportExportRepository importExportRepository;
+    private ImportExportRepository importExportRepository;
 
     public ImportExportSettingsPresenter(
+            ImportExportRepository importExportRepository,
             @NonNull ImportExportSettingsCallbacks callbacks
     ) {
-        inject(this);
+        this.importExportRepository = importExportRepository;
         this.callbacks = callbacks;
     }
 

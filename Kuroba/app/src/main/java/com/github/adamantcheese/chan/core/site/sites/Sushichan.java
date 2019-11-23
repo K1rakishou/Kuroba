@@ -28,8 +28,10 @@ import com.github.adamantcheese.chan.core.site.common.vichan.VichanActions;
 import com.github.adamantcheese.chan.core.site.common.vichan.VichanApi;
 import com.github.adamantcheese.chan.core.site.common.vichan.VichanCommentParser;
 import com.github.adamantcheese.chan.core.site.common.vichan.VichanEndpoints;
+import com.github.adamantcheese.chan.core.site.parser.CommentParserHelper;
 
 import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
 
 public class Sushichan extends CommonSite {
     public static final CommonSiteUrlHandler URL_HANDLER = new CommonSiteUrlHandler() {
@@ -63,10 +65,18 @@ public class Sushichan extends CommonSite {
         }
     };
 
+    private final CommentParserHelper commentParserHelper;
+    private final OkHttpClient okHttpClient;
+
+    public Sushichan(CommentParserHelper commentParserHelper, OkHttpClient okHttpClient) {
+        this.commentParserHelper = commentParserHelper;
+        this.okHttpClient = okHttpClient;
+    }
+
     @Override
     public void setup() {
         setName("Sushichan");
-        setIcon(SiteIcon.fromFavicon(HttpUrl.parse("https://sushigirl.us/favicon.ico")));
+        setIcon(SiteIcon.fromFavicon(imageLoaderV2, HttpUrl.parse("https://sushigirl.us/favicon.ico")));
 
         setBoards(
                 Board.fromSiteNameCode(this, "artsy", "wildcard"),
@@ -94,8 +104,8 @@ public class Sushichan extends CommonSite {
         setEndpoints(new VichanEndpoints(this,
                 "https://sushigirl.us/",
                 "https://sushigirl.us/"));
-        setActions(new VichanActions(this));
+        setActions(new VichanActions(okHttpClient, this));
         setApi(new VichanApi(this));
-        setParser(new VichanCommentParser());
+        setParser(themeHelper, new VichanCommentParser(), commentParserHelper);
     }
 }

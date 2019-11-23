@@ -33,6 +33,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.github.adamantcheese.chan.R;
+import com.github.adamantcheese.chan.StartActivity;
 import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 
 import java.util.ArrayList;
@@ -46,6 +47,7 @@ public class SelectLayout<T> extends LinearLayout implements SearchLayout.Search
     private List<SelectItem<T>> items = new ArrayList<>();
     private SelectAdapter adapter;
     private boolean allChecked = false;
+    private ThemeHelper themeHelper;
 
     public SelectLayout(Context context) {
         super(context);
@@ -57,6 +59,8 @@ public class SelectLayout<T> extends LinearLayout implements SearchLayout.Search
 
     public SelectLayout(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+
+        themeHelper = ((StartActivity) context).getComponent().getThemeHelper();
     }
 
     @Override
@@ -200,8 +204,8 @@ public class SelectLayout<T> extends LinearLayout implements SearchLayout.Search
             description = itemView.findViewById(R.id.description);
 
             checkBox.setOnCheckedChangeListener(this);
-            checkBox.setButtonTintList(ColorStateList.valueOf(ThemeHelper.getTheme().textPrimary));
-            checkBox.setTextColor(ColorStateList.valueOf(ThemeHelper.getTheme().textPrimary));
+            checkBox.setButtonTintList(ColorStateList.valueOf(themeHelper.getTheme().textPrimary));
+            checkBox.setTextColor(ColorStateList.valueOf(themeHelper.getTheme().textPrimary));
 
             itemView.setOnClickListener(this);
         }

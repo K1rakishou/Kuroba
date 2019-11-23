@@ -23,12 +23,18 @@ import android.widget.FrameLayout;
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.controller.Controller;
 import com.github.adamantcheese.chan.controller.NavigationController;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 
 public class PopupController extends Controller implements View.OnClickListener {
     private FrameLayout container;
 
     public PopupController(Context context) {
         super(context);
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     @Override

@@ -14,52 +14,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.github.adamantcheese.chan.core.di;
+package com.github.adamantcheese.chan.core.di.module.application;
 
 import android.app.NotificationManager;
 import android.content.Context;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.image.ImageLoaderV2;
 import com.github.adamantcheese.chan.core.net.BitmapLruImageCache;
 import com.github.adamantcheese.chan.core.saver.ImageSaver;
 import com.github.adamantcheese.chan.ui.captcha.CaptchaHolder;
-import com.github.adamantcheese.chan.ui.settings.base_directory.LocalThreadsBaseDirectory;
-import com.github.adamantcheese.chan.ui.settings.base_directory.SavedFilesBaseDirectory;
 import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 import com.github.adamantcheese.chan.utils.Logger;
 import com.github.k1rakishou.fsaf.FileChooser;
 import com.github.k1rakishou.fsaf.FileManager;
-import com.github.k1rakishou.fsaf.manager.base_directory.DirectoryManager;
-
-import org.codejargon.feather.Provides;
 
 import javax.inject.Singleton;
 
+import dagger.Module;
+import dagger.Provides;
+
 import static android.content.Context.NOTIFICATION_SERVICE;
 
+@Module(subcomponents = {StartActivityComponent.class})
 public class AppModule {
-    private Context applicationContext;
     public static final String DI_TAG = "Dependency Injection";
-
-    public AppModule(Context applicationContext) {
-        this.applicationContext = applicationContext;
-    }
-
-    @Provides
-    @Singleton
-    public Context provideApplicationContext() {
-        Logger.d(DI_TAG, "App Context");
-        return applicationContext;
-    }
 
     @Provides
     @Singleton
     public ImageLoaderV2 provideImageLoaderV2(
             RequestQueue requestQueue,
-            Context applicationContext,
-            ThemeHelper themeHelper,
             FileManager fileManager
     ) {
         final int runtimeMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
@@ -73,7 +59,7 @@ public class AppModule {
 
     @Provides
     @Singleton
-    public NotificationManager provideNotificationManager() {
+    public NotificationManager provideNotificationManager(Context applicationContext) {
         Logger.d(DI_TAG, "Notification manager");
         return (NotificationManager) applicationContext.getSystemService(NOTIFICATION_SERVICE);
     }
@@ -101,33 +87,8 @@ public class AppModule {
 
     @Provides
     @Singleton
-    public FileManager provideFileManager() {
-        DirectoryManager directoryManager = new DirectoryManager();
-
-        // Add new base directories here
-        LocalThreadsBaseDirectory localThreadsBaseDirectory = new LocalThreadsBaseDirectory();
-        SavedFilesBaseDirectory savedFilesBaseDirectory = new SavedFilesBaseDirectory();
-
-        FileManager fileManager = new FileManager(
-                applicationContext,
-                directoryManager
-        );
-
-        fileManager.registerBaseDir(
-                LocalThreadsBaseDirectory.class,
-                localThreadsBaseDirectory
-        );
-        fileManager.registerBaseDir(
-                SavedFilesBaseDirectory.class,
-                savedFilesBaseDirectory
-        );
-
-        return fileManager;
-    }
-
-    @Provides
-    @Singleton
-    public FileChooser provideFileChooser() {
+    public FileChooser provideFileChooser(Context applicationContext) {
         return new FileChooser(applicationContext);
     }
+
 }

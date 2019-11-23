@@ -20,7 +20,6 @@ import android.content.Context;
 
 import androidx.annotation.Nullable;
 
-import com.github.adamantcheese.chan.Chan;
 import com.github.adamantcheese.chan.utils.BackgroundUtils;
 import com.github.adamantcheese.chan.utils.Logger;
 
@@ -59,9 +58,10 @@ public class CaptchaNoJsPresenterV2 {
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final CaptchaNoJsHtmlParser parser;
-
     @Nullable
     private AuthenticationCallbacks callbacks;
+    private final OkHttpClient okHttpClient;
+
     @Nullable
     private CaptchaInfo prevCaptchaInfo = null;
 
@@ -71,9 +71,14 @@ public class CaptchaNoJsPresenterV2 {
     private String baseUrl;
     private long lastTimeCaptchaRequest = 0L;
 
-    public CaptchaNoJsPresenterV2(@Nullable AuthenticationCallbacks callbacks, Context context) {
+    public CaptchaNoJsPresenterV2(
+            Context context,
+            OkHttpClient okHttpClient,
+            @Nullable AuthenticationCallbacks callbacks
+    ) {
         this.callbacks = callbacks;
-        this.parser = new CaptchaNoJsHtmlParser(context);
+        this.okHttpClient = okHttpClient;
+        this.parser = new CaptchaNoJsHtmlParser(context, okHttpClient);
     }
 
     public void init(String siteKey, String baseUrl) {
@@ -130,7 +135,7 @@ public class CaptchaNoJsPresenterV2 {
                             .header("Cookie", defaultGoogleCookies)
                             .build();
 
-                    try (Response response = Chan.injector().instance(OkHttpClient.class).newCall(request).execute()) {
+                    try (Response response = okHttpClient.newCall(request).execute()) {
                         prevCaptchaInfo = handleGetRecaptchaResponse(response);
                     } finally {
                         verificationInProgress.set(false);
@@ -230,7 +235,7 @@ public class CaptchaNoJsPresenterV2 {
                 .header("Cookie", defaultGoogleCookies)
                 .build();
 
-        try (Response response = Chan.injector().instance(OkHttpClient.class).newCall(request).execute()) {
+        try (Response response = okHttpClient.newCall(request).execute()) {
             return handleGetRecaptchaResponse(response);
         }
     }

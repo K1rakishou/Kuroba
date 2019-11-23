@@ -24,12 +24,12 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.github.adamantcheese.chan.Chan;
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.StartActivity;
 import com.github.adamantcheese.chan.controller.Controller;
 import com.github.adamantcheese.chan.core.cache.FileCache;
 import com.github.adamantcheese.chan.core.database.DatabaseManager;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.manager.FilterWatchManager;
 import com.github.adamantcheese.chan.core.manager.WakeManager;
 import com.github.adamantcheese.chan.utils.Logger;
@@ -41,7 +41,6 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAttrColor;
 
@@ -49,17 +48,26 @@ public class DeveloperSettingsController extends Controller {
     private static final String TAG = "DEV";
     @Inject
     DatabaseManager databaseManager;
+    @Inject
+    FilterWatchManager filterWatchManager;
+    @Inject
+    FileCache fileCache;
+    @Inject
+    WakeManager wakeManager;
 
     public DeveloperSettingsController(Context context) {
         super(context);
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     @SuppressLint("SetTextI18n")
     @Override
     public void onCreate() {
         super.onCreate();
-
-        inject(this);
 
         navigation.setTitle(R.string.settings_developer);
 
@@ -79,13 +87,12 @@ public class DeveloperSettingsController extends Controller {
         wrapper.addView(crashButton);
 
         Button clearCacheButton = new Button(context);
-        FileCache cache = Chan.injector().instance(FileCache.class);
         clearCacheButton.setOnClickListener(v -> {
-            cache.clearCache();
+            fileCache.clearCache();
             Toast.makeText(context, "Cleared image cache", Toast.LENGTH_SHORT).show();
-            clearCacheButton.setText("Clear image cache (currently " + cache.getFileCacheSize() / 1024 / 1024 + "MB)");
+            clearCacheButton.setText("Clear image cache (currently " + fileCache.getFileCacheSize() / 1024 / 1024 + "MB)");
         });
-        clearCacheButton.setText("Clear image cache (currently " + cache.getFileCacheSize() / 1024 / 1024 + "MB)");
+        clearCacheButton.setText("Clear image cache (currently " + fileCache.getFileCacheSize() / 1024 / 1024 + "MB)");
         wrapper.addView(clearCacheButton);
 
         TextView summaryText = new TextView(context);
@@ -104,7 +111,6 @@ public class DeveloperSettingsController extends Controller {
         Button clearFilterWatchIgnores = new Button(context);
         clearFilterWatchIgnores.setOnClickListener(v -> {
             try {
-                FilterWatchManager filterWatchManager = Chan.injector().instance(FilterWatchManager.class);
                 Field ignoredField = filterWatchManager.getClass().getDeclaredField("ignoredPosts");
                 ignoredField.setAccessible(true);
                 ignoredField.set(filterWatchManager, Collections.synchronizedSet(new HashSet<Integer>()));
@@ -148,7 +154,6 @@ public class DeveloperSettingsController extends Controller {
         Button forceFilterWatch = new Button(context);
         forceFilterWatch.setOnClickListener(v -> {
             try {
-                WakeManager wakeManager = Chan.injector().instance(WakeManager.class);
                 Field wakeables = wakeManager.getClass().getDeclaredField("wakeableSet");
                 wakeables.setAccessible(true);
                 for(WakeManager.Wakeable wakeable : (Set<WakeManager.Wakeable>) wakeables.get(wakeManager)) {

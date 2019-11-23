@@ -18,7 +18,6 @@ package com.github.adamantcheese.chan.core.presenter;
 
 import android.text.TextUtils;
 
-import com.github.adamantcheese.chan.Chan;
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.core.database.DatabaseManager;
 import com.github.adamantcheese.chan.core.manager.ReplyManager;
@@ -80,6 +79,8 @@ public class ReplyPresenter implements AuthenticationLayoutCallback, ImagePickDe
     private WatchManager watchManager;
     private DatabaseManager databaseManager;
     private LastReplyRepository lastReplyRepository;
+    private SiteRepository siteRepository;
+    private BoardRepository boardRepository;
 
     private boolean bound = false;
     private Loadable loadable;
@@ -93,14 +94,20 @@ public class ReplyPresenter implements AuthenticationLayoutCallback, ImagePickDe
     private int selectedQuote = -1;
 
     @Inject
-    public ReplyPresenter(ReplyManager replyManager,
-                          WatchManager watchManager,
-                          DatabaseManager databaseManager,
-                          LastReplyRepository lastReplyRepository) {
+    public ReplyPresenter(
+            ReplyManager replyManager,
+            WatchManager watchManager,
+            DatabaseManager databaseManager,
+            LastReplyRepository lastReplyRepository,
+            SiteRepository siteRepository,
+            BoardRepository boardRepository
+    ) {
         this.replyManager = replyManager;
         this.watchManager = watchManager;
         this.databaseManager = databaseManager;
         this.lastReplyRepository = lastReplyRepository;
+        this.siteRepository = siteRepository;
+        this.boardRepository = boardRepository;
     }
 
     public void create(ReplyPresenterCallback callback) {
@@ -311,8 +318,8 @@ public class ReplyPresenter implements AuthenticationLayoutCallback, ImagePickDe
         if (replyResponse.posted) {
             //if the thread being presented has changed in the time waiting for this call to complete, the loadable field in
             //ReplyPresenter will be incorrect; reconstruct the loadable (local to this method) from the reply response
-            Site localSite = Chan.injector().instance(SiteRepository.class).forId(replyResponse.siteId);
-            Board localBoard = Chan.injector().instance(BoardRepository.class).getFromCode(localSite, replyResponse.boardCode);
+            Site localSite = siteRepository.forId(replyResponse.siteId);
+            Board localBoard = boardRepository.getFromCode(localSite, replyResponse.boardCode);
             Loadable localLoadable = databaseManager.getDatabaseLoadableManager().get(
                     Loadable.forThread(localSite, localBoard, //this loadable is for the reply response's site and board
                             replyResponse.threadNo == 0 ? replyResponse.postNo : replyResponse.threadNo, //if the replyresponse's threadno is 0, then it's a new thread so use the post number

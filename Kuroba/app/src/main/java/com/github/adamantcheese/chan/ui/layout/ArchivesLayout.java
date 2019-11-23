@@ -12,10 +12,9 @@ import androidx.core.util.Pair;
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.core.manager.ArchivesManager;
 import com.github.adamantcheese.chan.core.model.orm.Board;
+import com.github.adamantcheese.chan.utils.AndroidUtils;
 
 import javax.inject.Inject;
-
-import static com.github.adamantcheese.chan.Chan.inject;
 
 public class ArchivesLayout extends LinearLayout {
     private Callback callback;
@@ -34,7 +33,7 @@ public class ArchivesLayout extends LinearLayout {
 
     public ArchivesLayout(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        inject(this);
+        AndroidUtils.extractStartActivityComponent(context).inject(this);
     }
 
     @Override

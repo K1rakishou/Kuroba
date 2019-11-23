@@ -26,6 +26,7 @@ import androidx.annotation.Nullable;
 
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.StartActivity;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.presenter.ImportExportSettingsPresenter;
 import com.github.adamantcheese.chan.core.repository.ImportExportRepository;
 import com.github.adamantcheese.chan.core.settings.ChanSettings;
@@ -44,7 +45,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getApplicationLabel;
 
 public class ImportExportSettingsController extends SettingsController implements
@@ -56,6 +56,8 @@ public class ImportExportSettingsController extends SettingsController implement
     FileManager fileManager;
     @Inject
     FileChooser fileChooser;
+    @Inject
+    ImportExportRepository importExportRepository;
 
     private ImportExportSettingsPresenter presenter;
 
@@ -67,10 +69,13 @@ public class ImportExportSettingsController extends SettingsController implement
     public ImportExportSettingsController(Context context, @NonNull OnExportSuccessCallbacks callbacks) {
         super(context);
 
-        inject(this);
-
         this.callbacks = callbacks;
         this.loadingViewController = new LoadingViewController(context, true);
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     @Override
@@ -79,7 +84,7 @@ public class ImportExportSettingsController extends SettingsController implement
 
         navigation.setTitle(R.string.settings_import_export);
 
-        presenter = new ImportExportSettingsPresenter(this);
+        presenter = new ImportExportSettingsPresenter(importExportRepository, this);
 
         setupLayout();
         populatePreferences();

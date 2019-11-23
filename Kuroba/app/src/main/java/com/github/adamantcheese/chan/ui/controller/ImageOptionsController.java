@@ -38,12 +38,16 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.controller.Controller;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
+import com.github.adamantcheese.chan.core.manager.ReplyManager;
 import com.github.adamantcheese.chan.core.model.orm.Loadable;
 import com.github.adamantcheese.chan.core.presenter.ImageReencodingPresenter;
 import com.github.adamantcheese.chan.core.site.http.Reply;
 import com.github.adamantcheese.chan.ui.helper.ImageOptionsHelper;
 import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 import com.github.adamantcheese.chan.utils.AndroidUtils;
+
+import javax.inject.Inject;
 
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
@@ -76,8 +80,12 @@ public class ImageOptionsController extends Controller implements
     private boolean ignoreSetup;
     private boolean reencodeEnabled;
 
+    @Inject
+    ThemeHelper themeHelper;
+
     public ImageOptionsController(
             Context context,
+            ReplyManager replyManager,
             ImageOptionsHelper imageReencodingHelper,
             ImageOptionsControllerCallbacks callbacks,
             Loadable loadable,
@@ -90,7 +98,12 @@ public class ImageOptionsController extends Controller implements
         lastSettings = lastOptions;
         reencodeEnabled = supportsReencode;
 
-        presenter = new ImageReencodingPresenter(this, loadable, lastOptions);
+        presenter = new ImageReencodingPresenter(loadable, lastOptions, replyManager, this);
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     @Override
@@ -138,27 +151,27 @@ public class ImageOptionsController extends Controller implements
         if (presenter.getImageFormat() != Bitmap.CompressFormat.JPEG) {
             fixExif.setChecked(false);
             fixExif.setEnabled(false);
-            fixExif.setButtonTintList(ColorStateList.valueOf(ThemeHelper.getTheme().textSecondary));
-            fixExif.setTextColor(ColorStateList.valueOf(ThemeHelper.getTheme().textSecondary));
+            fixExif.setButtonTintList(ColorStateList.valueOf(themeHelper.getTheme().textSecondary));
+            fixExif.setTextColor(ColorStateList.valueOf(themeHelper.getTheme().textSecondary));
         }
 
         if (!reencodeEnabled) {
             changeImageChecksum.setChecked(false);
             changeImageChecksum.setEnabled(false);
-            changeImageChecksum.setButtonTintList(ColorStateList.valueOf(ThemeHelper.getTheme().textSecondary));
-            changeImageChecksum.setTextColor(ColorStateList.valueOf(ThemeHelper.getTheme().textSecondary));
+            changeImageChecksum.setButtonTintList(ColorStateList.valueOf(themeHelper.getTheme().textSecondary));
+            changeImageChecksum.setTextColor(ColorStateList.valueOf(themeHelper.getTheme().textSecondary));
             fixExif.setChecked(false);
             fixExif.setEnabled(false);
-            fixExif.setButtonTintList(ColorStateList.valueOf(ThemeHelper.getTheme().textSecondary));
-            fixExif.setTextColor(ColorStateList.valueOf(ThemeHelper.getTheme().textSecondary));
+            fixExif.setButtonTintList(ColorStateList.valueOf(themeHelper.getTheme().textSecondary));
+            fixExif.setTextColor(ColorStateList.valueOf(themeHelper.getTheme().textSecondary));
             removeMetadata.setChecked(false);
             removeMetadata.setEnabled(false);
-            removeMetadata.setButtonTintList(ColorStateList.valueOf(ThemeHelper.getTheme().textSecondary));
-            removeMetadata.setTextColor(ColorStateList.valueOf(ThemeHelper.getTheme().textSecondary));
+            removeMetadata.setButtonTintList(ColorStateList.valueOf(themeHelper.getTheme().textSecondary));
+            removeMetadata.setTextColor(ColorStateList.valueOf(themeHelper.getTheme().textSecondary));
             reencode.setChecked(false);
             reencode.setEnabled(false);
-            reencode.setButtonTintList(ColorStateList.valueOf(ThemeHelper.getTheme().textSecondary));
-            reencode.setTextColor(ColorStateList.valueOf(ThemeHelper.getTheme().textSecondary));
+            reencode.setButtonTintList(ColorStateList.valueOf(themeHelper.getTheme().textSecondary));
+            reencode.setTextColor(ColorStateList.valueOf(themeHelper.getTheme().textSecondary));
         }
 
         viewHolder.setOnClickListener(this);
@@ -237,8 +250,8 @@ public class ImageOptionsController extends Controller implements
     public void onReencodingCanceled() {
         removeMetadata.setChecked(false);
         removeMetadata.setEnabled(true);
-        removeMetadata.setButtonTintList(ColorStateList.valueOf(ThemeHelper.getTheme().textPrimary));
-        removeMetadata.setTextColor(ColorStateList.valueOf(ThemeHelper.getTheme().textPrimary));
+        removeMetadata.setButtonTintList(ColorStateList.valueOf(themeHelper.getTheme().textPrimary));
+        removeMetadata.setTextColor(ColorStateList.valueOf(themeHelper.getTheme().textPrimary));
         reencode.setChecked(false);
 
         reencode.setText(context.getString(R.string.image_options_re_encode));
@@ -249,8 +262,8 @@ public class ImageOptionsController extends Controller implements
     public void onReencodeOptionsSet(ImageReencodingPresenter.ReencodeSettings reencodeSettings) {
         removeMetadata.setChecked(true);
         removeMetadata.setEnabled(false);
-        removeMetadata.setButtonTintList(ColorStateList.valueOf(ThemeHelper.getTheme().textSecondary));
-        removeMetadata.setTextColor(ColorStateList.valueOf(ThemeHelper.getTheme().textSecondary));
+        removeMetadata.setButtonTintList(ColorStateList.valueOf(themeHelper.getTheme().textSecondary));
+        removeMetadata.setTextColor(ColorStateList.valueOf(themeHelper.getTheme().textSecondary));
 
         reencode.setText("Re-encode " + reencodeSettings.prettyPrint(presenter.getImageFormat()));
 

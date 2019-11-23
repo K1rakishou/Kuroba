@@ -74,7 +74,6 @@ import java.io.File;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAttrColor;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getString;
@@ -93,9 +92,10 @@ public class ReplyLayout extends LoadView implements
     ReplyPresenter presenter;
     @Inject
     CaptchaHolder captchaHolder;
+    @Inject
+    ThemeHelper themeHelper;
 
     private ReplyLayoutCallback callback;
-
     private AuthenticationLayoutInterface authenticationLayout;
 
     private boolean blockSelectionChange = false;
@@ -149,6 +149,8 @@ public class ReplyLayout extends LoadView implements
 
     public ReplyLayout(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+
+        AndroidUtils.extractStartActivityComponent(context).inject(this);
     }
 
     @Override
@@ -166,7 +168,6 @@ public class ReplyLayout extends LoadView implements
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
-        inject(this);
 
         final LayoutInflater inflater = LayoutInflater.from(getContext());
 
@@ -196,8 +197,8 @@ public class ReplyLayout extends LoadView implements
         progressLayout = inflater.inflate(R.layout.layout_reply_progress, this, false);
         currentProgress = progressLayout.findViewById(R.id.current_progress);
 
-        spoiler.setButtonTintList(ColorStateList.valueOf(ThemeHelper.getTheme().textPrimary));
-        spoiler.setTextColor(ColorStateList.valueOf(ThemeHelper.getTheme().textPrimary));
+        spoiler.setButtonTintList(ColorStateList.valueOf(themeHelper.getTheme().textPrimary));
+        spoiler.setTextColor(ColorStateList.valueOf(themeHelper.getTheme().textPrimary));
 
         // Setup reply layout views
         fileName.setOnLongClickListener(v -> presenter.fileNameLongClicked());
@@ -220,7 +221,7 @@ public class ReplyLayout extends LoadView implements
         setRoundItemBackground(more);
         more.setOnClickListener(this);
 
-        ThemeHelper.getTheme().imageDrawable.apply(attach);
+        themeHelper.getTheme().imageDrawable.apply(attach);
         setRoundItemBackground(attach);
         attach.setOnClickListener(this);
         attach.setOnLongClickListener(v -> {
@@ -232,7 +233,7 @@ public class ReplyLayout extends LoadView implements
         setRoundItemBackground(captchaImage);
         captcha.setOnClickListener(this);
 
-        ThemeHelper.getTheme().sendDrawable.apply(submit);
+        themeHelper.getTheme().sendDrawable.apply(submit);
         setRoundItemBackground(submit);
         submit.setOnClickListener(this);
 
@@ -243,7 +244,7 @@ public class ReplyLayout extends LoadView implements
         // Setup captcha layout views
         captchaContainer.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
-        ThemeHelper.getTheme().refreshDrawable.apply(captchaHardReset);
+        themeHelper.getTheme().refreshDrawable.apply(captchaHardReset);
         setRoundItemBackground(captchaHardReset);
         captchaHardReset.setOnClickListener(this);
 
@@ -599,9 +600,9 @@ public class ReplyLayout extends LoadView implements
     @Override
     public void openPreview(boolean show, File previewFile) {
         if (show) {
-            ThemeHelper.getTheme().clearDrawable.apply(attach);
+            themeHelper.getTheme().clearDrawable.apply(attach);
         } else {
-            ThemeHelper.getTheme().imageDrawable.apply(attach);
+            themeHelper.getTheme().imageDrawable.apply(attach);
         }
 
         if (show) {

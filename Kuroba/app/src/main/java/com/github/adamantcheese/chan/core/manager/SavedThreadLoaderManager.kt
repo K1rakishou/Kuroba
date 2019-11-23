@@ -5,17 +5,21 @@ import com.github.adamantcheese.chan.core.model.ChanThread
 import com.github.adamantcheese.chan.core.model.orm.Loadable
 import com.github.adamantcheese.chan.core.repository.SavedThreadLoaderRepository
 import com.github.adamantcheese.chan.ui.settings.base_directory.LocalThreadsBaseDirectory
+import com.github.adamantcheese.chan.ui.theme.ThemeHelper
 import com.github.adamantcheese.chan.utils.BackgroundUtils
 import com.github.adamantcheese.chan.utils.Logger
 import com.github.k1rakishou.fsaf.FileManager
 import com.github.k1rakishou.fsaf.file.DirectorySegment
 import com.github.k1rakishou.fsaf.file.FileSegment
+import com.google.gson.Gson
 import java.io.IOException
 import javax.inject.Inject
 
 class SavedThreadLoaderManager @Inject constructor(
         private val savedThreadLoaderRepository: SavedThreadLoaderRepository,
-        private val fileManager: FileManager
+        private val fileManager: FileManager,
+        private val themeHelper: ThemeHelper,
+        private val gson: Gson
 ) {
 
     fun loadSavedThread(loadable: Loadable): ChanThread? {
@@ -81,7 +85,12 @@ class SavedThreadLoaderManager @Inject constructor(
                 return null
             }
 
-            return ThreadMapper.fromSerializedThread(loadable, serializableThread)
+            return ThreadMapper.fromSerializedThread(
+                    loadable,
+                    themeHelper,
+                    gson,
+                    serializableThread
+            )
         } catch (e: IOException) {
             Logger.e(TAG, "Could not load saved thread", e)
             return null

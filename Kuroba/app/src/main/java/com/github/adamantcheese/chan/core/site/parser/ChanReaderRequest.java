@@ -44,11 +44,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.inject.Inject;
-
 import okhttp3.HttpUrl;
-
-import static com.github.adamantcheese.chan.Chan.inject;
 
 /**
  * Process a typical imageboard json response.<br>
@@ -71,11 +67,7 @@ public class ChanReaderRequest extends JsonReaderRequest<ChanLoaderResponse> {
         });
     }
 
-    @Inject
-    DatabaseManager databaseManager;
-
-    @Inject
-    FilterEngine filterEngine;
+    private FilterEngine filterEngine;
 
     private Loadable loadable;
     private List<Post> cached;
@@ -84,9 +76,14 @@ public class ChanReaderRequest extends JsonReaderRequest<ChanLoaderResponse> {
 
     private List<Filter> filters;
 
-    public ChanReaderRequest(ChanLoaderRequestParams request) {
+    public ChanReaderRequest(
+            DatabaseManager databaseManager,
+            FilterEngine filterEngine,
+            ChanLoaderRequestParams request
+    ) {
         super(getChanUrl(request.loadable).toString(), request.listener, request.errorListener);
-        inject(this);
+
+        this.filterEngine = filterEngine;
 
         // Copy the loadable and cached list. The cached array may changed/cleared by other threads.
         loadable = request.loadable.clone();

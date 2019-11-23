@@ -22,10 +22,17 @@ import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.controller.Controller;
 import com.github.adamantcheese.chan.controller.ControllerTransition;
 import com.github.adamantcheese.chan.controller.ui.NavigationControllerContainerLayout;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.settings.ChanSettings;
 import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 
+import javax.inject.Inject;
+
 public class StyledToolbarNavigationController extends ToolbarNavigationController {
+
+    @Inject
+    ThemeHelper themeHelper;
+
     public StyledToolbarNavigationController(Context context) {
         super(context);
     }
@@ -40,8 +47,13 @@ public class StyledToolbarNavigationController extends ToolbarNavigationControll
         nav.setNavigationController(this);
         nav.setSwipeEnabled(ChanSettings.controllerSwipeable.get());
         toolbar = view.findViewById(R.id.toolbar);
-        toolbar.setBackgroundColor(ThemeHelper.getTheme().primaryColor.color);
+        toolbar.setBackgroundColor(themeHelper.getTheme().primaryColor.color);
         toolbar.setCallback(this);
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     @Override

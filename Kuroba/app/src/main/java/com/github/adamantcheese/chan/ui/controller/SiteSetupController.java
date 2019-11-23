@@ -21,6 +21,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.github.adamantcheese.chan.R;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.presenter.SiteSetupPresenter;
 import com.github.adamantcheese.chan.core.settings.OptionsSetting;
 import com.github.adamantcheese.chan.core.site.Site;
@@ -35,8 +36,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
-
 public class SiteSetupController extends SettingsController implements SiteSetupPresenter.Callback {
     @Inject
     SiteSetupPresenter presenter;
@@ -50,9 +49,13 @@ public class SiteSetupController extends SettingsController implements SiteSetup
     }
 
     @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
+    }
+
+    @Override
     public void onCreate() {
         super.onCreate();
-        inject(this);
 
         // Navigation
         navigation.setTitle(R.string.settings_screen);

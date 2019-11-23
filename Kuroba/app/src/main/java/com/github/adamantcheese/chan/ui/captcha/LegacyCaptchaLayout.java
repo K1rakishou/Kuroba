@@ -38,20 +38,22 @@ import com.github.adamantcheese.chan.ui.view.FixedRatioThumbnailView;
 import com.github.adamantcheese.chan.utils.AndroidUtils;
 import com.github.adamantcheese.chan.utils.IOUtils;
 
+import javax.inject.Inject;
+
 import static com.github.adamantcheese.chan.utils.AndroidUtils.setRoundItemBackground;
 
 public class LegacyCaptchaLayout extends LinearLayout implements AuthenticationLayoutInterface, View.OnClickListener {
     private FixedRatioThumbnailView image;
     private EditText input;
     private ImageView submit;
-
     private WebView internalWebView;
-
     private String baseUrl;
     private String siteKey;
     private AuthenticationLayoutCallback callback;
-
     private String challenge;
+
+    @Inject
+    ThemeHelper themeHelper;
 
     public LegacyCaptchaLayout(Context context) {
         super(context);
@@ -63,6 +65,8 @@ public class LegacyCaptchaLayout extends LinearLayout implements AuthenticationL
 
     public LegacyCaptchaLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+
+        AndroidUtils.extractStartActivityComponent(context).inject(this);
     }
 
     /**
@@ -87,7 +91,7 @@ public class LegacyCaptchaLayout extends LinearLayout implements AuthenticationL
             return false;
         });
         submit = findViewById(R.id.submit);
-        ThemeHelper.getTheme().sendDrawable.apply(submit);
+        themeHelper.getTheme().sendDrawable.apply(submit);
         setRoundItemBackground(submit);
         submit.setOnClickListener(this);
 

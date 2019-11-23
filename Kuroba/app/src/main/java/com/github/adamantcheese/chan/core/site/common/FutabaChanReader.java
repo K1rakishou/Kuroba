@@ -10,7 +10,9 @@ import com.github.adamantcheese.chan.core.site.SiteEndpoints;
 import com.github.adamantcheese.chan.core.site.parser.ChanReader;
 import com.github.adamantcheese.chan.core.site.parser.ChanReaderProcessingQueue;
 import com.github.adamantcheese.chan.core.site.parser.CommentParser;
+import com.github.adamantcheese.chan.core.site.parser.CommentParserHelper;
 import com.github.adamantcheese.chan.core.site.parser.PostParser;
+import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 
 import org.jsoup.parser.Parser;
 
@@ -26,10 +28,14 @@ import static com.github.adamantcheese.chan.core.site.SiteEndpoints.makeArgument
 public class FutabaChanReader implements ChanReader {
     private final PostParser postParser;
 
-    public FutabaChanReader() {
-        CommentParser commentParser = new CommentParser();
+    public FutabaChanReader(
+            ThemeHelper themeHelper,
+            CommentParser commentParser,
+            CommentParserHelper commentParserHelper
+    ) {
+        this.postParser = new DefaultPostParser(themeHelper, commentParser, commentParserHelper);
+
         commentParser.addDefaultRules();
-        this.postParser = new DefaultPostParser(commentParser);
     }
 
     @Override

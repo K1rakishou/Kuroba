@@ -149,13 +149,9 @@ public class Chan4 extends SiteBase {
             return null;
         }
     };
-
     private static final String TAG = "Chan4";
-
     private static final String CAPTCHA_KEY = "6Ldp2bsSAAAAAAJ5uyx_lx34lJeEpTLVkP5k04qc";
-
     private static final Random random = new Random();
-
     private final SiteEndpoints endpoints = new SiteEndpoints() {
         private final HttpUrl a = new HttpUrl.Builder()
                 .scheme("https")
@@ -310,7 +306,6 @@ public class Chan4 extends SiteBase {
                     .build();
         }
     };
-
     private SiteRequestModifier siteRequestModifier = new SiteRequestModifier() {
         @Override
         public void modifyHttpCall(HttpCall httpCall, Request.Builder requestBuilder) {
@@ -340,7 +335,6 @@ public class Chan4 extends SiteBase {
             }
         }
     };
-
     private SiteActions actions = new SiteActions() {
         @Override
         public void boards(final BoardsListener listener) {
@@ -563,7 +557,7 @@ public class Chan4 extends SiteBase {
 
     @Override
     public SiteIcon icon() {
-        return SiteIcon.fromFavicon(HttpUrl.parse("https://s.4cdn.org/image/favicon.ico"));
+        return SiteIcon.fromFavicon(imageLoaderV2, HttpUrl.parse("https://s.4cdn.org/image/favicon.ico"));
     }
 
     @Override
@@ -625,7 +619,7 @@ public class Chan4 extends SiteBase {
 
     @Override
     public ChanReader chanReader() {
-        return new FutabaChanReader();
+        return new FutabaChanReader(themeHelper, commentParser, commentParserHelper);
     }
 
     @Override

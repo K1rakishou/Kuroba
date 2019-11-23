@@ -35,8 +35,10 @@ import com.github.adamantcheese.chan.controller.Controller;
 import com.github.adamantcheese.chan.core.database.DatabaseHistoryManager;
 import com.github.adamantcheese.chan.core.database.DatabaseManager;
 import com.github.adamantcheese.chan.core.database.DatabaseSavedReplyManager;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.model.orm.Board;
 import com.github.adamantcheese.chan.core.model.orm.History;
+import com.github.adamantcheese.chan.core.repository.SiteRepository;
 import com.github.adamantcheese.chan.core.settings.ChanSettings;
 import com.github.adamantcheese.chan.ui.helper.HintPopup;
 import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
@@ -51,7 +53,6 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
 
 public class HistoryController extends Controller implements
@@ -59,6 +60,10 @@ public class HistoryController extends Controller implements
         ToolbarNavigationController.ToolbarSearchCallback {
     @Inject
     DatabaseManager databaseManager;
+    @Inject
+    ThemeHelper themeHelper;
+    @Inject
+    SiteRepository siteRepository;
 
     private DatabaseHistoryManager databaseHistoryManager;
     private DatabaseSavedReplyManager databaseSavedReplyManager;
@@ -71,9 +76,13 @@ public class HistoryController extends Controller implements
     }
 
     @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
+    }
+
+    @Override
     public void onCreate() {
         super.onCreate();
-        inject(this);
 
         databaseHistoryManager = databaseManager.getDatabaseHistoryManager();
         databaseSavedReplyManager = databaseManager.getDatabaseSavedReplyManager();
@@ -99,7 +108,7 @@ public class HistoryController extends Controller implements
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
 
-        adapter = new HistoryAdapter();
+        adapter = new HistoryAdapter(themeHelper);
         recyclerView.setAdapter(adapter);
         adapter.load();
 
@@ -164,16 +173,20 @@ public class HistoryController extends Controller implements
         private List<History> sourceList = new ArrayList<>();
         private List<History> displayList = new ArrayList<>();
         private String searchQuery;
-
         private boolean resultPending = false;
+        private ThemeHelper themeHelper;
 
-        public HistoryAdapter() {
+        public HistoryAdapter(ThemeHelper themeHelper) {
             setHasStableIds(true);
+
+            this.themeHelper = themeHelper;
         }
 
         @Override
         public HistoryCell onCreateViewHolder(ViewGroup parent, int viewType) {
-            return new HistoryCell(LayoutInflater.from(parent.getContext()).inflate(R.layout.cell_history, parent, false));
+            return new HistoryCell(
+                    LayoutInflater.from(parent.getContext()).inflate(R.layout.cell_history, parent, false),
+                    themeHelper);
         }
 
         @Override
@@ -240,7 +253,7 @@ public class HistoryController extends Controller implements
         private TextView subtext;
         private ImageView delete;
 
-        public HistoryCell(View itemView) {
+        public HistoryCell(View itemView, ThemeHelper themeHelper) {
             super(itemView);
 
             thumbnail = itemView.findViewById(R.id.thumbnail);
@@ -248,8 +261,7 @@ public class HistoryController extends Controller implements
             text = itemView.findViewById(R.id.text);
             subtext = itemView.findViewById(R.id.subtext);
             delete = itemView.findViewById(R.id.delete);
-
-            ThemeHelper.getTheme().clearDrawable.apply(delete);
+            themeHelper.getTheme().clearDrawable.apply(delete);
 
             delete.setOnClickListener(this);
 

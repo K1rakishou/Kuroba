@@ -34,13 +34,17 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.core.presenter.BoardSetupPresenter;
 import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
+import com.github.adamantcheese.chan.utils.AndroidUtils;
+
+import javax.inject.Inject;
 
 public class BoardAddLayout extends LinearLayout implements SearchLayout.SearchLayoutCallback, BoardSetupPresenter.AddCallback, View.OnClickListener {
     private BoardSetupPresenter presenter;
-
     private SuggestionsAdapter suggestionsAdapter;
-
     private Button checkAllButton;
+
+    @Inject
+    ThemeHelper themeHelper;
 
     public BoardAddLayout(Context context) {
         this(context, null);
@@ -52,6 +56,8 @@ public class BoardAddLayout extends LinearLayout implements SearchLayout.SearchL
 
     public BoardAddLayout(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+
+        AndroidUtils.extractStartActivityComponent(context).inject(this);
     }
 
     @Override
@@ -164,8 +170,8 @@ public class BoardAddLayout extends LinearLayout implements SearchLayout.SearchL
             description = itemView.findViewById(R.id.description);
             check = itemView.findViewById(R.id.check);
             check.setOnCheckedChangeListener(this);
-            check.setButtonTintList(ColorStateList.valueOf(ThemeHelper.getTheme().textPrimary));
-            check.setTextColor(ColorStateList.valueOf(ThemeHelper.getTheme().textPrimary));
+            check.setButtonTintList(ColorStateList.valueOf(themeHelper.getTheme().textPrimary));
+            check.setTextColor(ColorStateList.valueOf(themeHelper.getTheme().textPrimary));
 
             itemView.setOnClickListener(this);
         }

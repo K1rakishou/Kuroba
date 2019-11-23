@@ -31,13 +31,18 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
 import okhttp3.Response;
 
 import static android.text.TextUtils.isEmpty;
 
 public class VichanActions extends CommonSite.CommonActions {
-    public VichanActions(CommonSite commonSite) {
+    private OkHttpClient okHttpClient;
+
+    public VichanActions(OkHttpClient okHttpClient, CommonSite commonSite) {
         super(commonSite);
+
+        this.okHttpClient = okHttpClient;
     }
 
     @Override
@@ -78,7 +83,10 @@ public class VichanActions extends CommonSite.CommonActions {
     @Override
     public void prepare(MultipartHttpCall call, Reply reply, ReplyResponse replyResponse) {
         VichanAntispam antispam = new VichanAntispam(
-                HttpUrl.parse(site.resolvable().desktopUrl(reply.loadable, null)));
+                okHttpClient,
+                HttpUrl.parse(site.resolvable().desktopUrl(reply.loadable, null))
+        );
+
         antispam.addDefaultIgnoreFields();
         for (Map.Entry<String, String> e : antispam.get().entrySet()) {
             call.parameter(e.getKey(), e.getValue());

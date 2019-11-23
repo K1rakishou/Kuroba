@@ -44,15 +44,14 @@ import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader.ImageContainer;
 import com.android.volley.toolbox.ImageLoader.ImageListener;
-import com.github.adamantcheese.chan.Chan;
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.core.image.ImageLoaderV2;
 import com.github.adamantcheese.chan.core.model.orm.Loadable;
 import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
+import com.github.adamantcheese.chan.utils.AndroidUtils;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getString;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.sp;
 
@@ -83,6 +82,8 @@ public class ThumbnailView extends View implements ImageListener {
 
     @Inject
     public ImageLoaderV2 imageLoaderV2;
+    @Inject
+    ThemeHelper themeHelper;
 
     public ThumbnailView(Context context) {
         super(context);
@@ -100,10 +101,10 @@ public class ThumbnailView extends View implements ImageListener {
     }
 
     private void init() {
-        textPaint.setColor(ThemeHelper.getTheme().textPrimary);
-        textPaint.setTextSize(sp(14));
+        AndroidUtils.extractStartActivityComponent(getContext()).inject(this);
 
-        inject(this);
+        textPaint.setColor(themeHelper.getTheme().textPrimary);
+        textPaint.setTextSize(sp(14));
     }
 
     public void setUrl(String url, int maxWidth, int maxHeight) {
@@ -121,7 +122,7 @@ public class ThumbnailView extends View implements ImageListener {
         }
 
         if (!TextUtils.isEmpty(url)) {
-            container = Chan.injector().instance(ImageLoaderV2.class).get(url, this, maxWidth, maxHeight);
+            container = imageLoaderV2.get(url, this, maxWidth, maxHeight);
         }
     }
 

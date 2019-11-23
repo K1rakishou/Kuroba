@@ -35,6 +35,7 @@ import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.StartActivity;
 import com.github.adamantcheese.chan.controller.Controller;
 import com.github.adamantcheese.chan.controller.NavigationController;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.manager.WatchManager;
 import com.github.adamantcheese.chan.core.manager.WatchManager.PinMessages;
 import com.github.adamantcheese.chan.core.model.Post;
@@ -50,6 +51,7 @@ import com.github.adamantcheese.chan.ui.helper.RuntimePermissionsHelper;
 import com.github.adamantcheese.chan.ui.layout.ArchivesLayout;
 import com.github.adamantcheese.chan.ui.layout.ThreadLayout;
 import com.github.adamantcheese.chan.ui.settings.base_directory.LocalThreadsBaseDirectory;
+import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 import com.github.adamantcheese.chan.ui.toolbar.NavigationItem;
 import com.github.adamantcheese.chan.ui.toolbar.Toolbar;
 import com.github.adamantcheese.chan.ui.toolbar.ToolbarMenuItem;
@@ -67,7 +69,6 @@ import java.util.Deque;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.ui.toolbar.ToolbarMenu.OVERFLOW_ID;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAttrColor;
@@ -85,6 +86,8 @@ public class ViewThreadController extends ThreadController implements ThreadLayo
     WatchManager watchManager;
     @Inject
     FileManager fileManager;
+    @Inject
+    ThemeHelper themeHelper;
 
     private boolean pinItemPinned = false;
     private DownloadThreadState prevState = DownloadThreadState.Default;
@@ -110,6 +113,11 @@ public class ViewThreadController extends ThreadController implements ThreadLayo
         super(context);
     }
 
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
+    }
+
     public void setLoadable(Loadable loadable) {
         this.loadable = loadable;
     }
@@ -117,7 +125,6 @@ public class ViewThreadController extends ThreadController implements ThreadLayo
     @Override
     public void onCreate() {
         super.onCreate();
-        inject(this);
 
         downloadAnimation = (AnimatedVectorDrawableCompat)
                 AnimationUtils.createAnimatedDownloadIcon(context, Color.WHITE).mutate();
@@ -310,7 +317,7 @@ public class ViewThreadController extends ThreadController implements ThreadLayo
         String link = loadable.site.resolvable().desktopUrl(
                 loadable,
                 threadLayout.getPresenter().getChanThread().getOp());
-        AndroidUtils.openLinkInBrowser((Activity) context, link);
+        AndroidUtils.openLinkInBrowser((Activity) context, themeHelper, link);
     }
 
     private void shareClicked(ToolbarMenuSubItem item) {
@@ -751,7 +758,7 @@ public class ViewThreadController extends ThreadController implements ThreadLayo
         Post tempOP = new Post.Builder().board(loadable.board).id(loadable.no).opId(loadable.no).setUnixTimestampSeconds(1).comment("").build();
         String link = loadable.site.resolvable().desktopUrl(loadable, tempOP);
         link = link.replace("https://boards.4chan.org/", "https://" + domainNamePair.second + "/");
-        AndroidUtils.openLinkInBrowser((Activity) context, link);
+        AndroidUtils.openLinkInBrowser((Activity) context, themeHelper, link);
     }
 
     @Override

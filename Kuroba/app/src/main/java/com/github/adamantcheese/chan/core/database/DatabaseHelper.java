@@ -34,6 +34,7 @@ import com.github.adamantcheese.chan.core.model.orm.SiteModel;
 import com.github.adamantcheese.chan.core.settings.ChanSettings;
 import com.github.adamantcheese.chan.core.settings.json.JsonSettings;
 import com.github.adamantcheese.chan.utils.Logger;
+import com.google.gson.Gson;
 import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.stmt.DeleteBuilder;
@@ -55,7 +56,6 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
     private static final String DATABASE_NAME = "ChanDB";
     private static final int DATABASE_VERSION = 40;
 
-
     public Dao<Pin, Integer> pinDao;
     public Dao<Loadable, Integer> loadableDao;
     public Dao<SavedReply, Integer> savedDao;
@@ -66,13 +66,15 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
     public Dao<SiteModel, Integer> siteDao;
     public Dao<SavedThread, Integer> savedThreadDao;
 
+    private final Gson gson;
     private final Context context;
 
     @Inject
-    public DatabaseHelper(Context context) {
+    public DatabaseHelper(Context context, Gson gson) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
 
         this.context = context;
+        this.gson = gson;
 
         try {
             pinDao = getDao(Pin.class);
@@ -352,7 +354,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
         List<SiteModel> allSites = siteDao.queryForAll();
         SiteModel toDelete = null;
         for (SiteModel siteModel : allSites) {
-            Pair<SiteConfig, JsonSettings> siteModelConfig = siteModel.loadConfigFields();
+            Pair<SiteConfig, JsonSettings> siteModelConfig = siteModel.loadConfigFields(gson);
             if (siteModelConfig.first.classId == id) {
                 toDelete = siteModel;
                 break;

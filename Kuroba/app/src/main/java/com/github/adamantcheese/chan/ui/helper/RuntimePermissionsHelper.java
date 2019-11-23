@@ -31,17 +31,20 @@ import androidx.core.content.ContextCompat;
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.utils.AndroidUtils;
 
+import javax.inject.Inject;
+
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAppContext;
 
 public class RuntimePermissionsHelper {
     private static final int RUNTIME_PERMISSION_RESULT_ID = 3;
 
-    private ActivityCompat.OnRequestPermissionsResultCallback callbackActvity;
+    private ActivityCompat.OnRequestPermissionsResultCallback callbackActivity;
 
     private CallbackHolder pendingCallback;
 
+    @Inject
     public RuntimePermissionsHelper(ActivityCompat.OnRequestPermissionsResultCallback callbackActvity) {
-        this.callbackActvity = callbackActvity;
+        this.callbackActivity = callbackActvity;
     }
 
     public boolean hasPermission(String permission) {
@@ -54,7 +57,7 @@ public class RuntimePermissionsHelper {
             pendingCallback.callback = callback;
             pendingCallback.permission = permission;
 
-            ActivityCompat.requestPermissions((Activity) callbackActvity, new String[]{permission}, RUNTIME_PERMISSION_RESULT_ID);
+            ActivityCompat.requestPermissions((Activity) callbackActivity, new String[]{permission}, RUNTIME_PERMISSION_RESULT_ID);
 
             return true;
         } else {

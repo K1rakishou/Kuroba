@@ -15,9 +15,9 @@ import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
  * make it look like a normal scrollbar.
  */
 public class FastScrollerHelper {
-    public static FastScroller create(RecyclerView recyclerView) {
-        StateListDrawable thumb = getThumb();
-        StateListDrawable track = getTrack();
+    public static FastScroller create(ThemeHelper themeHelper, RecyclerView recyclerView) {
+        StateListDrawable thumb = getThumb(themeHelper);
+        StateListDrawable track = getTrack(themeHelper);
 
         final int defaultThickness = dp(4);
         final int targetWidth = dp(8);
@@ -30,18 +30,18 @@ public class FastScrollerHelper {
                 defaultThickness, minimumRange, margin, thumbMinLength, targetWidth);
     }
 
-    private static StateListDrawable getThumb() {
+    private static StateListDrawable getThumb(ThemeHelper themeHelper) {
         StateListDrawable list = new StateListDrawable();
-        Theme curTheme = ThemeHelper.getTheme();
+        Theme curTheme = themeHelper.getTheme();
         list.addState(new int[]{android.R.attr.state_pressed},
                 new ColorDrawable(curTheme.accentColor.color));
         list.addState(new int[]{}, new ColorDrawable(curTheme.textSecondary));
         return list;
     }
 
-    private static StateListDrawable getTrack() {
+    private static StateListDrawable getTrack(ThemeHelper themeHelper) {
         StateListDrawable list = new StateListDrawable();
-        Theme curTheme = ThemeHelper.getTheme();
+        Theme curTheme = themeHelper.getTheme();
         list.addState(new int[]{android.R.attr.state_pressed},
                 new ColorDrawable(curTheme.textHint));
         list.addState(new int[]{}, new ColorDrawable(0));

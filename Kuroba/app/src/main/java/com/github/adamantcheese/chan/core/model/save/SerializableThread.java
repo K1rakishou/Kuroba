@@ -3,6 +3,7 @@ package com.github.adamantcheese.chan.core.model.save;
 import com.github.adamantcheese.chan.core.mapper.PostMapper;
 import com.github.adamantcheese.chan.core.model.Post;
 import com.github.adamantcheese.chan.utils.BackgroundUtils;
+import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ public class SerializableThread {
     /**
      * Merge old posts with new posts avoiding duplicates and then sort merged list
      */
-    public SerializableThread merge(List<Post> posts) {
+    public SerializableThread merge(Gson gson, List<Post> posts) {
         if (BackgroundUtils.isMainThread()) {
             throw new RuntimeException("Cannot be executed on the main thread!");
         }
@@ -36,7 +37,7 @@ public class SerializableThread {
         postsSet.addAll(postList);
 
         for (Post post : posts) {
-            postsSet.add(PostMapper.toSerializablePost(post));
+            postsSet.add(PostMapper.toSerializablePost(gson, post));
         }
 
         List<SerializablePost> filteredPosts = new ArrayList<>(postsSet.size());

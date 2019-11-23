@@ -18,8 +18,7 @@ package com.github.adamantcheese.chan.core.site.http;
 
 import androidx.annotation.Nullable;
 
-import com.github.adamantcheese.chan.Chan;
-import com.github.adamantcheese.chan.core.di.NetModule;
+import com.github.adamantcheese.chan.core.di.module.application.NetModule;
 import com.github.adamantcheese.chan.core.site.Site;
 import com.github.adamantcheese.chan.core.site.SiteRequestModifier;
 
@@ -32,9 +31,11 @@ import okhttp3.Request;
  * Manages the {@link HttpCall} executions.
  */
 public class HttpCallManager {
+    private OkHttpClient okHttpClient;
 
     @Inject
-    public HttpCallManager() {
+    public HttpCallManager(OkHttpClient okHttpClient) {
+        this.okHttpClient = okHttpClient;
     }
 
     public void makeHttpCall(
@@ -66,6 +67,6 @@ public class HttpCallManager {
         requestBuilder.header("User-Agent", NetModule.USER_AGENT);
         Request request = requestBuilder.build();
 
-        Chan.injector().instance(OkHttpClient.class).newCall(request).enqueue(httpCall);
+        okHttpClient.newCall(request).enqueue(httpCall);
     }
 }

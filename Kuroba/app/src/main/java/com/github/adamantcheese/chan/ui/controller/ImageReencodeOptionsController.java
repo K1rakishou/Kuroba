@@ -18,6 +18,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.controller.Controller;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.presenter.ImageReencodingPresenter;
 import com.github.adamantcheese.chan.ui.helper.ImageOptionsHelper;
 import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
@@ -29,6 +30,7 @@ public class ImageReencodeOptionsController extends Controller implements
     private static final int TRANSITION_DURATION = 200;
 
     private ImageReencodeOptionsCallbacks callbacks;
+    private ThemeHelper themeHelper;
     private ImageOptionsHelper imageReencodingHelper;
     private Bitmap.CompressFormat imageFormat;
     private Pair<Integer, Integer> dims;
@@ -82,7 +84,8 @@ public class ImageReencodeOptionsController extends Controller implements
             ImageReencodeOptionsCallbacks callbacks,
             Bitmap.CompressFormat imageFormat,
             Pair<Integer, Integer> dims,
-            ImageReencodingPresenter.ReencodeSettings lastOptions
+            ImageReencodingPresenter.ReencodeSettings lastOptions,
+            ThemeHelper themeHelper
     ) {
         super(context);
 
@@ -90,7 +93,13 @@ public class ImageReencodeOptionsController extends Controller implements
         this.callbacks = callbacks;
         this.imageFormat = imageFormat;
         this.dims = dims;
-        lastSettings = lastOptions;
+        this.themeHelper = themeHelper;
+        this.lastSettings = lastOptions;
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     @Override
@@ -124,12 +133,12 @@ public class ImageReencodeOptionsController extends Controller implements
         if (imageFormat == Bitmap.CompressFormat.PNG) {
             quality.setEnabled(false);
             reencodeImageAsPng.setEnabled(false);
-            reencodeImageAsPng.setButtonTintList(ColorStateList.valueOf(ThemeHelper.getTheme().textSecondary));
-            reencodeImageAsPng.setTextColor(ColorStateList.valueOf(ThemeHelper.getTheme().textSecondary));
+            reencodeImageAsPng.setButtonTintList(ColorStateList.valueOf(themeHelper.getTheme().textSecondary));
+            reencodeImageAsPng.setTextColor(ColorStateList.valueOf(themeHelper.getTheme().textSecondary));
         } else if (imageFormat == Bitmap.CompressFormat.JPEG) {
             reencodeImageAsJpeg.setEnabled(false);
-            reencodeImageAsJpeg.setButtonTintList(ColorStateList.valueOf(ThemeHelper.getTheme().textSecondary));
-            reencodeImageAsJpeg.setTextColor(ColorStateList.valueOf(ThemeHelper.getTheme().textSecondary));
+            reencodeImageAsJpeg.setButtonTintList(ColorStateList.valueOf(themeHelper.getTheme().textSecondary));
+            reencodeImageAsJpeg.setTextColor(ColorStateList.valueOf(themeHelper.getTheme().textSecondary));
         }
 
         statusBarColorPrevious = getWindow().getStatusBarColor();

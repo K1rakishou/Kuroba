@@ -38,6 +38,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.controller.Controller;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.model.orm.Board;
 import com.github.adamantcheese.chan.core.presenter.BoardSetupPresenter;
 import com.github.adamantcheese.chan.core.site.Site;
@@ -54,7 +55,6 @@ import java.util.List;
 import javax.inject.Inject;
 
 import static android.text.TextUtils.isEmpty;
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.fixSnackbarText;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAttrColor;
@@ -62,6 +62,8 @@ import static com.github.adamantcheese.chan.utils.AndroidUtils.getAttrColor;
 public class BoardSetupController extends Controller implements View.OnClickListener, BoardSetupPresenter.Callback {
     @Inject
     BoardSetupPresenter presenter;
+    @Inject
+    ThemeHelper themeHelper;
 
     private CrossfadeView crossfadeView;
     private RecyclerView savedBoardsRecycler;
@@ -103,10 +105,13 @@ public class BoardSetupController extends Controller implements View.OnClickList
     }
 
     @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
+    }
+
+    @Override
     public void onCreate() {
         super.onCreate();
-
-        inject(this);
 
         // Inflate
         view = inflateRes(R.layout.controller_board_setup);
@@ -133,7 +138,7 @@ public class BoardSetupController extends Controller implements View.OnClickList
         itemTouchHelper.attachToRecyclerView(savedBoardsRecycler);
 
         add.setOnClickListener(this);
-        ThemeHelper.getTheme().applyFabColor(add);
+        themeHelper.getTheme().applyFabColor(add);
         crossfadeView.toggle(false, false);
 
         // Presenter

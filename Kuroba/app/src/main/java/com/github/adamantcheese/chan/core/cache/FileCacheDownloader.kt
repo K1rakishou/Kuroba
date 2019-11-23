@@ -21,14 +21,12 @@ import android.os.Looper
 import androidx.annotation.AnyThread
 import androidx.annotation.MainThread
 import androidx.annotation.WorkerThread
-import com.github.adamantcheese.chan.Chan
-import com.github.adamantcheese.chan.core.di.NetModule
+import com.github.adamantcheese.chan.core.di.module.application.NetModule
 import com.github.adamantcheese.chan.utils.BackgroundUtils
 import com.github.adamantcheese.chan.utils.Logger
 import com.github.k1rakishou.fsaf.FileManager
 import com.github.k1rakishou.fsaf.file.RawFile
 import okhttp3.Call
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.ResponseBody
 import okhttp3.internal.closeQuietly
@@ -42,9 +40,10 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class FileCacheDownloader(
         private val fileManager: FileManager,
+        private val proxiedOkHttpClient: NetModule.ProxiedOkHttpClient,
+        private val output: RawFile,
         // Main thread only.
         private val callback: Callback?,
-        private val output: RawFile,
         val url: String
 ) : Runnable {
     private val handler: Handler = Handler(Looper.getMainLooper())
@@ -283,8 +282,7 @@ class FileCacheDownloader(
                 .build()
 
         //we want to use the proxy instance here
-        val call = (Chan.injector().instance(OkHttpClient::class.java) as NetModule.ProxiedOkHttpClient)
-                .proxiedClient.newCall(request)
+        val call = proxiedOkHttpClient.proxiedClient.newCall(request)
 
         val response = call.execute()
         if (!response.isSuccessful) {

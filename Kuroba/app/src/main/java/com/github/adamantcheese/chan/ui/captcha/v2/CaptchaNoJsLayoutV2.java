@@ -51,7 +51,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
+import okhttp3.OkHttpClient;
+
 import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
 
 public class CaptchaNoJsLayoutV2 extends FrameLayout
@@ -73,6 +74,8 @@ public class CaptchaNoJsLayoutV2 extends FrameLayout
 
     @Inject
     CaptchaHolder captchaHolder;
+    @Inject
+    OkHttpClient okHttpClient;
 
     public CaptchaNoJsLayoutV2(@NonNull Context context) {
         this(context, null, 0);
@@ -84,10 +87,10 @@ public class CaptchaNoJsLayoutV2 extends FrameLayout
 
     public CaptchaNoJsLayoutV2(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        inject(this);
+        AndroidUtils.extractStartActivityComponent(context).inject(this);
 
         this.context = context;
-        this.presenter = new CaptchaNoJsPresenterV2(this, context);
+        this.presenter = new CaptchaNoJsPresenterV2(context, okHttpClient, this);
         this.adapter = new CaptchaNoJsV2Adapter(context);
 
         View view = inflate(context, R.layout.layout_captcha_nojs_v2, this);

@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.core.database.DatabaseManager;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.manager.ThreadSaveManager;
 import com.github.adamantcheese.chan.core.model.orm.Pin;
 import com.github.adamantcheese.chan.core.model.orm.PinType;
@@ -18,21 +19,23 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
-
 public class ExperimentalSettingsController extends SettingsController {
     private static final String TAG = "ExperimentalSettingsController";
-
-    public ExperimentalSettingsController(Context context) {
-        super(context);
-    }
-
     private BooleanSettingView incrementalThreadDownloadingSetting;
 
     @Inject
     ThreadSaveManager threadSaveManager;
     @Inject
     DatabaseManager databaseManager;
+
+    public ExperimentalSettingsController(Context context) {
+        super(context);
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
+    }
 
     @Override
     public void onCreate() {
@@ -43,8 +46,6 @@ public class ExperimentalSettingsController extends SettingsController {
         setupLayout();
         populatePreferences();
         buildPreferences();
-
-        inject(this);
     }
 
     @Override

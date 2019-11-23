@@ -30,7 +30,6 @@ import android.webkit.WebViewClient;
 
 import androidx.annotation.NonNull;
 
-import com.github.adamantcheese.chan.Chan;
 import com.github.adamantcheese.chan.core.site.Site;
 import com.github.adamantcheese.chan.core.site.SiteAuthentication;
 import com.github.adamantcheese.chan.ui.captcha.AuthenticationLayoutCallback;
@@ -51,8 +50,6 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
-import static com.github.adamantcheese.chan.Chan.inject;
-
 /**
  * It directly loads the captcha2 fallback url into a webview, and on each requests it executes
  * some javascript that will tell the callback if the token is there.
@@ -63,6 +60,8 @@ public class CaptchaNojsLayoutV1 extends WebView implements AuthenticationLayout
 
     @Inject
     CaptchaHolder captchaHolder;
+    @Inject
+    OkHttpClient okHttpClient;
 
     private AuthenticationLayoutCallback callback;
     private String baseUrl;
@@ -72,22 +71,16 @@ public class CaptchaNojsLayoutV1 extends WebView implements AuthenticationLayout
     private boolean isAutoReply = true;
 
     public CaptchaNojsLayoutV1(Context context) {
-        super(context);
-        init();
+        this(context, null);
     }
 
     public CaptchaNojsLayoutV1(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init();
+        this(context, attrs, 0);
     }
 
     public CaptchaNojsLayoutV1(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        init();
-    }
-
-    private void init() {
-        inject(this);
+        AndroidUtils.extractStartActivityComponent(context).inject(this);
     }
 
     @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
@@ -169,7 +162,7 @@ public class CaptchaNojsLayoutV1 extends WebView implements AuthenticationLayout
                 .header("User-Agent", webviewUserAgent)
                 .header("Referer", baseUrl)
                 .build();
-        Chan.injector().instance(OkHttpClient.class).newCall(request).enqueue(new Callback() {
+        okHttpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
             }

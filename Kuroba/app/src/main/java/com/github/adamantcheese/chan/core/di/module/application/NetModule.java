@@ -14,7 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.github.adamantcheese.chan.core.di;
+package com.github.adamantcheese.chan.core.di.module.application;
+
+import android.content.Context;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
@@ -26,56 +28,72 @@ import com.github.adamantcheese.chan.core.site.http.HttpCallManager;
 import com.github.adamantcheese.chan.utils.Logger;
 import com.github.k1rakishou.fsaf.FileManager;
 
-import org.codejargon.feather.Provides;
-
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
+import dagger.Module;
+import dagger.Provides;
 import okhttp3.OkHttpClient;
 
-import static com.github.adamantcheese.chan.utils.AndroidUtils.getAppContext;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getApplicationLabel;
 
+@Module
 public class NetModule {
     public static final String USER_AGENT = getApplicationLabel() + "/" + BuildConfig.VERSION_NAME;
 
     @Provides
     @Singleton
-    public RequestQueue provideRequestQueue() {
+    public RequestQueue provideRequestQueue(Context applicationContext) {
         Logger.d(AppModule.DI_TAG, "Request queue");
-        return Volley.newRequestQueue(getAppContext(), new ProxiedHurlStack());
+        return Volley.newRequestQueue(applicationContext, new ProxiedHurlStack());
     }
 
     @Provides
     @Singleton
-    public FileCache provideFileCache(FileManager fileManager) {
+    public FileCache provideFileCache(
+            Context applcationContext,
+            FileManager fileManager,
+            ProxiedOkHttpClient proxiedOkHttpClient
+    ) {
         Logger.d(AppModule.DI_TAG, "File cache");
-        return new FileCache(getCacheDir(), fileManager);
+        return new FileCache(getCacheDir(applcationContext), fileManager, proxiedOkHttpClient);
     }
 
-    private File getCacheDir() {
+    private File getCacheDir(Context applicationContext) {
         // See also res/xml/filepaths.xml for the fileprovider.
-        if (getAppContext().getExternalCacheDir() != null) {
-            return getAppContext().getExternalCacheDir();
+        if (applicationContext.getExternalCacheDir() != null) {
+            return applicationContext.getExternalCacheDir();
         } else {
-            return getAppContext().getCacheDir();
+            return applicationContext.getCacheDir();
         }
     }
 
     @Provides
     @Singleton
-    public HttpCallManager provideHttpCallManager() {
+    public HttpCallManager provideHttpCallManager(OkHttpClient okHttpClient) {
         Logger.d(AppModule.DI_TAG, "Http call manager");
-        return new HttpCallManager();
+        return new HttpCallManager(okHttpClient);
     }
 
     @Provides
     @Singleton
-    public OkHttpClient provideBasicOkHttpClient() {
+    public ProxiedOkHttpClient provideBasicOkHttpClient() {
         Logger.d(AppModule.DI_TAG, "OkHTTP client");
         return new ProxiedOkHttpClient();
+    }
+
+    @Provides
+    @Singleton
+    public OkHttpClient provideOkHttpClient() {
+        return new OkHttpClient.Builder()
+                .proxy(ChanSettings.getProxy())
+                .connectTimeout(20, TimeUnit.SECONDS)
+                .readTimeout(20, TimeUnit.SECONDS)
+                .writeTimeout(20, TimeUnit.SECONDS)
+                .callTimeout(20, TimeUnit.SECONDS)
+                .build();
     }
 
     //this is basically the same as OkHttpClient, but with a singleton for a proxy instance

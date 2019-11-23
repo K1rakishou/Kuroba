@@ -57,7 +57,6 @@ import javax.inject.Inject;
 
 import okhttp3.HttpUrl;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getApplicationLabel;
 import static java.util.concurrent.TimeUnit.DAYS;
 
@@ -69,18 +68,17 @@ import static java.util.concurrent.TimeUnit.DAYS;
 public class UpdateManager {
     private static final String TAG = "UpdateManager";
 
-    @Inject
-    RequestQueue volleyRequestQueue;
-
-    @Inject
-    FileCache fileCache;
+    private RequestQueue volleyRequestQueue;
+    private FileCache fileCache;
 
     private ProgressDialog updateDownloadDialog;
     private Context context;
 
-    public UpdateManager(Context context) {
-        inject(this);
+    @Inject
+    public UpdateManager(Context context, RequestQueue volleyRequestQueue, FileCache fileCache) {
         this.context = context;
+        this.volleyRequestQueue = volleyRequestQueue;
+        this.fileCache = fileCache;
     }
 
     /**

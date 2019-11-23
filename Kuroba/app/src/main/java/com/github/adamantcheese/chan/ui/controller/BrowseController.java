@@ -27,6 +27,7 @@ import android.view.animation.RotateAnimation;
 import android.widget.Toast;
 
 import com.github.adamantcheese.chan.R;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.model.Post;
 import com.github.adamantcheese.chan.core.model.PostImage;
 import com.github.adamantcheese.chan.core.model.orm.Board;
@@ -41,6 +42,7 @@ import com.github.adamantcheese.chan.ui.helper.BoardHelper;
 import com.github.adamantcheese.chan.ui.helper.HintPopup;
 import com.github.adamantcheese.chan.ui.layout.BrowseBoardsFloatingMenu;
 import com.github.adamantcheese.chan.ui.layout.ThreadLayout;
+import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 import com.github.adamantcheese.chan.ui.toolbar.NavigationItem;
 import com.github.adamantcheese.chan.ui.toolbar.ToolbarMenu;
 import com.github.adamantcheese.chan.ui.toolbar.ToolbarMenuItem;
@@ -54,7 +56,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getString;
 
 public class BrowseController extends ThreadController implements
@@ -67,6 +68,8 @@ public class BrowseController extends ThreadController implements
 
     @Inject
     BrowsePresenter presenter;
+    @Inject
+    ThemeHelper themeHelper;
 
     private PostsFilter.Order order;
     public String searchQuery = null;
@@ -76,9 +79,13 @@ public class BrowseController extends ThreadController implements
     }
 
     @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
+    }
+
+    @Override
     public void onCreate() {
         super.onCreate();
-        inject(this);
 
         // Initialization
         order = PostsFilter.Order.find(ChanSettings.boardOrder.get());
@@ -297,7 +304,7 @@ public class BrowseController extends ThreadController implements
             if (share) {
                 AndroidUtils.shareLink(link);
             } else {
-                AndroidUtils.openLinkInBrowser((Activity) context, link);
+                AndroidUtils.openLinkInBrowser((Activity) context, themeHelper, link);
             }
         }
     }

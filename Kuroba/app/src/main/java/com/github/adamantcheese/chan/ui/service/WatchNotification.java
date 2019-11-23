@@ -38,6 +38,7 @@ import androidx.core.app.NotificationCompat;
 import com.github.adamantcheese.chan.Chan;
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.StartActivity;
+import com.github.adamantcheese.chan.core.di.component.service.WatchNotificationServiceComponent;
 import com.github.adamantcheese.chan.core.manager.ThreadSaveManager;
 import com.github.adamantcheese.chan.core.manager.WatchManager;
 import com.github.adamantcheese.chan.core.model.Post;
@@ -62,7 +63,6 @@ import java.util.regex.Pattern;
 import javax.inject.Inject;
 
 import static android.provider.Settings.System.DEFAULT_NOTIFICATION_URI;
-import static com.github.adamantcheese.chan.Chan.inject;
 
 public class WatchNotification extends Service {
     private static final String TAG = "WatchNotification";
@@ -78,14 +78,16 @@ public class WatchNotification extends Service {
     private int NOTIFICATION_SOUND = 0x2;
     private int NOTIFICATION_PEEK = 0x4;
 
+    private WatchNotificationServiceComponent serviceComponent;
+
     @Inject
     NotificationManager notificationManager;
-
     @Inject
     WatchManager watchManager;
-
     @Inject
     ThreadSaveManager threadSaveManager;
+    @Inject
+    Context applicationContext;
 
     @Override
     public IBinder onBind(final Intent intent) {
@@ -95,23 +97,40 @@ public class WatchNotification extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        inject(this);
+
+        serviceComponent = Chan.getComponent().watchNotificationServiceComponent();
+        serviceComponent.inject(this);
 
         ChanSettings.watchLastCount.set(0);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             //notification channel for non-alerts
-            notificationManager.createNotificationChannel(new NotificationChannel(NOTIFICATION_ID_STR, NOTIFICATION_NAME, NotificationManager.IMPORTANCE_MIN));
+
+            NotificationChannel normalNotificationChannel = new NotificationChannel(
+                    NOTIFICATION_ID_STR,
+                    NOTIFICATION_NAME,
+                    NotificationManager.IMPORTANCE_MIN
+            );
+            notificationManager.createNotificationChannel(normalNotificationChannel);
+
             //notification channel for alerts
-            NotificationChannel alert = new NotificationChannel(NOTIFICATION_ID_ALERT_STR, NOTIFICATION_NAME_ALERT, NotificationManager.IMPORTANCE_HIGH);
-            alert.setSound(DEFAULT_NOTIFICATION_URI, new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .setLegacyStreamType(AudioManager.STREAM_NOTIFICATION)
-                    .build());
-            alert.enableLights(true);
-            alert.setLightColor(0xff91e466);
-            notificationManager.createNotificationChannel(alert);
+            NotificationChannel alertNotificationChannel = new NotificationChannel(
+                    NOTIFICATION_ID_ALERT_STR,
+                    NOTIFICATION_NAME_ALERT,
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+            alertNotificationChannel
+                    .setSound(DEFAULT_NOTIFICATION_URI,
+                            new AudioAttributes.Builder()
+                                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                                    .setLegacyStreamType(AudioManager.STREAM_NOTIFICATION)
+                                    .build()
+                    );
+
+            alertNotificationChannel.enableLights(true);
+            alertNotificationChannel.setLightColor(0xff91e466);
+            notificationManager.createNotificationChannel(alertNotificationChannel);
         }
 
         Notification notification = createNotification();
@@ -133,7 +152,8 @@ public class WatchNotification extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent != null && intent.getExtras() != null && intent.getExtras().getBoolean("pause_pins", false)) {
+        if (intent != null && intent.getExtras() != null
+                && intent.getExtras().getBoolean("pause_pins", false)) {
             watchManager.pauseAll();
         } else {
             Notification notification = createNotification();
@@ -227,7 +247,7 @@ public class WatchNotification extends Service {
             }
         }
 
-        if (((Chan) Chan.injector().instance(Context.class)).getApplicationInForeground()) {
+        if (((Chan) applicationContext).getApplicationInForeground()) {
             flags &= ~(NOTIFICATION_LIGHT);
             flags &= ~(NOTIFICATION_SOUND);
         }

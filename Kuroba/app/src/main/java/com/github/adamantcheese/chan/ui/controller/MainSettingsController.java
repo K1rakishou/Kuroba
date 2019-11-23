@@ -21,6 +21,7 @@ import android.content.Context;
 import com.github.adamantcheese.chan.BuildConfig;
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.StartActivity;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.presenter.SettingsPresenter;
 import com.github.adamantcheese.chan.ui.settings.LinkSettingView;
 import com.github.adamantcheese.chan.ui.settings.SettingsController;
@@ -29,13 +30,12 @@ import com.github.adamantcheese.chan.utils.AndroidUtils;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getApplicationLabel;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getString;
 
 public class MainSettingsController extends SettingsController implements SettingsPresenter.Callback {
     @Inject
-    private SettingsPresenter presenter;
+    SettingsPresenter presenter;
 
     private LinkSettingView watchLink;
     private LinkSettingView sitesSetting;
@@ -46,9 +46,13 @@ public class MainSettingsController extends SettingsController implements Settin
     }
 
     @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
+    }
+
+    @Override
     public void onCreate() {
         super.onCreate();
-        inject(this);
 
         navigation.setTitle(R.string.settings_screen);
         setupLayout();

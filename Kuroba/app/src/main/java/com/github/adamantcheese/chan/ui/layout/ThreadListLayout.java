@@ -39,7 +39,6 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.github.adamantcheese.chan.Chan;
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.core.manager.WatchManager;
 import com.github.adamantcheese.chan.core.model.ChanThread;
@@ -69,6 +68,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import static com.github.adamantcheese.chan.ui.adapter.PostAdapter.TYPE_POST;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAttrColor;
@@ -96,8 +97,12 @@ public class ThreadListLayout extends FrameLayout implements ReplyLayout.ReplyLa
     private int background;
     private boolean searchOpen;
     private int lastPostCount;
-
     private Handler mainHandler = new Handler(Looper.getMainLooper());
+
+    @Inject
+    WatchManager watchManager;
+    @Inject
+    ThemeHelper themeHelper;
 
     private RecyclerView.OnScrollListener scrollListener = new RecyclerView.OnScrollListener() {
         @Override
@@ -108,6 +113,8 @@ public class ThreadListLayout extends FrameLayout implements ReplyLayout.ReplyLa
 
     public ThreadListLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
+
+        AndroidUtils.extractStartActivityComponent(context).inject(this);
     }
 
     @Override
@@ -127,7 +134,7 @@ public class ThreadListLayout extends FrameLayout implements ReplyLayout.ReplyLa
 
         // View setup
         reply.setCallback(this);
-        searchStatus.setTypeface(ThemeHelper.getTheme().mainFont);
+        searchStatus.setTypeface(themeHelper.getTheme().mainFont);
     }
 
     public void setCallbacks(PostAdapter.PostAdapterCallback postAdapterCallback,
@@ -138,7 +145,14 @@ public class ThreadListLayout extends FrameLayout implements ReplyLayout.ReplyLa
         this.callback = callback;
         this.threadListLayoutCallback = threadListLayoutCallback;
 
-        postAdapter = new PostAdapter(recyclerView, postAdapterCallback, postCellCallback, statusCellCallback);
+        postAdapter = new PostAdapter(
+                themeHelper,
+                recyclerView,
+                postAdapterCallback,
+                postCellCallback,
+                statusCellCallback
+        );
+
         recyclerView.setAdapter(postAdapter);
         if (ChanSettings.shiftPostFormat.get()) {
             recyclerView.getRecycledViewPool().setMaxRecycledViews(TYPE_POST, 0);
@@ -301,7 +315,7 @@ public class ThreadListLayout extends FrameLayout implements ReplyLayout.ReplyLa
         //Filter out any bookmarked threads from the catalog
         if (ChanSettings.removeWatchedFromCatalog.get() && thread.getLoadable().isCatalogMode()) {
             List<Post> toRemove = new ArrayList<>();
-            for (Pin pin : Chan.injector().instance(WatchManager.class).getAllPins()) {
+            for (Pin pin : watchManager.getAllPins()) {
                 for (Post post : filteredPosts) {
                     if (pin.loadable.equals(Loadable.forThread(thread.getLoadable().site, thread.getLoadable().board, post.no, ""))) {
                         toRemove.add(post);
@@ -668,7 +682,7 @@ public class ThreadListLayout extends FrameLayout implements ReplyLayout.ReplyLa
             }
         } else {
             if (fastScroller == null) {
-                fastScroller = FastScrollerHelper.create(recyclerView);
+                fastScroller = FastScrollerHelper.create(themeHelper, recyclerView);
             }
         }
         recyclerView.setVerticalScrollBarEnabled(!enabled);

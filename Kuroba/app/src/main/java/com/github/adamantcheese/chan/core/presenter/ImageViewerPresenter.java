@@ -38,16 +38,13 @@ import java.util.Set;
 import javax.inject.Inject;
 
 import static android.content.Context.AUDIO_SERVICE;
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.core.settings.ChanSettings.MediaAutoLoadMode.shouldLoadForNetworkType;
 
 public class ImageViewerPresenter implements MultiImageView.Callback, ViewPager.OnPageChangeListener {
     private static final String TAG = "ImageViewerPresenter";
 
     private final Callback callback;
-
-    @Inject
-    FileCache fileCache;
+    private final FileCache fileCache;
 
     private boolean entering = true;
     private boolean exiting = false;
@@ -64,12 +61,18 @@ public class ImageViewerPresenter implements MultiImageView.Callback, ViewPager.
 
     private boolean muted;
 
-    public ImageViewerPresenter(Callback callback) {
+    @Inject
+    public ImageViewerPresenter(
+            Callback callback,
+            FileCache fileCache
+    ) {
         this.callback = callback;
-        inject(this);
+        this.fileCache = fileCache;
 
-        AudioManager audioManager = (AudioManager) AndroidUtils.getAppContext().getSystemService(AUDIO_SERVICE);
-        muted = ChanSettings.videoDefaultMuted.get() && (ChanSettings.headsetDefaultMuted.get() || !audioManager.isWiredHeadsetOn());
+        AudioManager audioManager =
+                (AudioManager) AndroidUtils.getAppContext().getSystemService(AUDIO_SERVICE);
+        muted = ChanSettings.videoDefaultMuted.get()
+                && (ChanSettings.headsetDefaultMuted.get() || !audioManager.isWiredHeadsetOn());
     }
 
     public void showImages(List<PostImage> images, int position, Loadable loadable) {

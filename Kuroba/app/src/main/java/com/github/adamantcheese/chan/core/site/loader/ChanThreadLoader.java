@@ -30,6 +30,7 @@ import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.core.database.DatabaseManager;
+import com.github.adamantcheese.chan.core.manager.FilterEngine;
 import com.github.adamantcheese.chan.core.manager.SavedThreadLoaderManager;
 import com.github.adamantcheese.chan.core.manager.WatchManager;
 import com.github.adamantcheese.chan.core.model.ChanThread;
@@ -52,7 +53,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
 import javax.net.ssl.SSLException;
 
 import io.reactivex.Single;
@@ -60,8 +60,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-
-import static com.github.adamantcheese.chan.Chan.inject;
 
 /**
  * A ChanThreadLoader is the loader for Loadables.
@@ -76,23 +74,18 @@ public class ChanThreadLoader implements Response.ErrorListener, Response.Listen
 
     private static final int[] WATCH_TIMEOUTS = {10, 15, 20, 30, 60, 90, 120, 180, 240, 300, 600, 1800, 3600};
 
-    @Inject
-    RequestQueue volleyRequestQueue;
-
-    @Inject
-    DatabaseManager databaseManager;
-
-    @Inject
-    SavedThreadLoaderManager savedThreadLoaderManager;
+    private RequestQueue volleyRequestQueue;
+    private DatabaseManager databaseManager;
+    private FilterEngine filterEngine;
+    private SavedThreadLoaderManager savedThreadLoaderManager;
 
     private WatchManager watchManager;
 
     private final List<ChanLoaderCallback> listeners = new ArrayList<>();
     private final Loadable loadable;
+
     private ChanThread thread;
-
     private ChanLoaderRequest request;
-
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
 
     private int currentTimeout = 0;
@@ -105,11 +98,20 @@ public class ChanThreadLoader implements Response.ErrorListener, Response.Listen
      * Also, do not use feather().instance(WatchManager.class) here because it will create a cyclic
      * dependency instantiation
      */
-    public ChanThreadLoader(Loadable loadable, WatchManager watchManager) {
+    public ChanThreadLoader(
+            Loadable loadable,
+            WatchManager watchManager,
+            RequestQueue volleyRequestQueue,
+            DatabaseManager databaseManager,
+            FilterEngine filterEngine,
+            SavedThreadLoaderManager savedThreadLoaderManager
+    ) {
         this.loadable = loadable;
         this.watchManager = watchManager;
-
-        inject(this);
+        this.volleyRequestQueue = volleyRequestQueue;
+        this.databaseManager = databaseManager;
+        this.filterEngine = filterEngine;
+        this.savedThreadLoaderManager = savedThreadLoaderManager;
     }
 
     /**
@@ -344,7 +346,12 @@ public class ChanThreadLoader implements Response.ErrorListener, Response.Listen
                 cached,
                 this,
                 this);
-        ChanReaderRequest readerRequest = new ChanReaderRequest(requestParams);
+        ChanReaderRequest readerRequest = new ChanReaderRequest(
+                databaseManager,
+                filterEngine,
+                requestParams
+        );
+
         request = new ChanLoaderRequest(readerRequest);
 
         volleyRequestQueue.add(request.getVolleyRequest());
@@ -376,7 +383,7 @@ public class ChanThreadLoader implements Response.ErrorListener, Response.Listen
 
         // Normal thread, not archived/deleted/closed
         if (response == null || response.posts.isEmpty()) {
-            onErrorResponse(new VolleyError("Post size is 0")); 
+            onErrorResponse(new VolleyError("Post size is 0"));
             return false;
         }
 

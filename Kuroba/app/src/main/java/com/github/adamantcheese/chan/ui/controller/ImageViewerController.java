@@ -48,6 +48,8 @@ import com.android.volley.toolbox.ImageLoader.ImageListener;
 import com.davemorrissey.labs.subscaleview.ImageViewState;
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.controller.Controller;
+import com.github.adamantcheese.chan.core.cache.FileCache;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.image.ImageLoaderV2;
 import com.github.adamantcheese.chan.core.model.Post;
 import com.github.adamantcheese.chan.core.model.PostImage;
@@ -59,6 +61,7 @@ import com.github.adamantcheese.chan.core.settings.ChanSettings;
 import com.github.adamantcheese.chan.core.site.ImageSearch;
 import com.github.adamantcheese.chan.ui.adapter.ImageViewerAdapter;
 import com.github.adamantcheese.chan.ui.helper.PostHelper;
+import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 import com.github.adamantcheese.chan.ui.toolbar.NavigationItem;
 import com.github.adamantcheese.chan.ui.toolbar.Toolbar;
 import com.github.adamantcheese.chan.ui.toolbar.ToolbarMenu;
@@ -75,6 +78,7 @@ import com.github.adamantcheese.chan.ui.view.TransitionImageView;
 import com.github.adamantcheese.chan.utils.AndroidUtils;
 import com.github.adamantcheese.chan.utils.Logger;
 import com.github.adamantcheese.chan.utils.StringUtils;
+import com.github.k1rakishou.fsaf.FileManager;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -85,7 +89,6 @@ import javax.inject.Inject;
 
 import okhttp3.HttpUrl;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getDimen;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getString;
@@ -103,6 +106,12 @@ public class ImageViewerController extends Controller implements ImageViewerPres
     ImageLoaderV2 imageLoaderV2;
     @Inject
     ImageSaver imageSaver;
+    @Inject
+    FileCache fileCache;
+    @Inject
+    FileManager fileManager;
+    @Inject
+    ThemeHelper themeHelper;
 
     private int statusBarColorPrevious;
     private AnimatorSet startAnimation;
@@ -124,12 +133,16 @@ public class ImageViewerController extends Controller implements ImageViewerPres
 
     public ImageViewerController(Loadable loadable, Context context, Toolbar toolbar) {
         super(context);
-        inject(this);
 
         this.toolbar = toolbar;
         this.loadable = loadable;
 
-        presenter = new ImageViewerPresenter(this);
+        presenter = new ImageViewerPresenter(this, fileCache);
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     @Override
@@ -223,7 +236,11 @@ public class ImageViewerController extends Controller implements ImageViewerPres
         if (ChanSettings.openLinkBrowser.get()) {
             AndroidUtils.openLink(postImage.imageUrl.toString());
         } else {
-            AndroidUtils.openLinkInBrowser((Activity) context, postImage.imageUrl.toString());
+            AndroidUtils.openLinkInBrowser(
+                    (Activity) context,
+                    themeHelper,
+                    postImage.imageUrl.toString()
+            );
         }
     }
 
@@ -279,7 +296,7 @@ public class ImageViewerController extends Controller implements ImageViewerPres
         if (share && ChanSettings.shareUrl.get()) {
             AndroidUtils.shareLink(postImage.imageUrl.toString());
         } else {
-            ImageSaveTask task = new ImageSaveTask(loadable, postImage);
+            ImageSaveTask task = new ImageSaveTask(fileCache, fileManager, loadable, postImage);
             task.setShare(share);
             if (ChanSettings.saveBoardFolder.get()) {
                 String subFolderName;
@@ -460,7 +477,12 @@ public class ImageViewerController extends Controller implements ImageViewerPres
                 for (ImageSearch imageSearch : ImageSearch.engines) {
                     if (((Integer) item.getId()) == imageSearch.getId()) {
                         final HttpUrl searchImageUrl = getSearchImageUrl(presenter.getCurrentPostImage());
-                        AndroidUtils.openLinkInBrowser((Activity) context, imageSearch.getUrl(searchImageUrl.toString()));
+                        AndroidUtils.openLinkInBrowser(
+                                (Activity) context,
+                                themeHelper,
+                                imageSearch.getUrl(searchImageUrl.toString())
+                        );
+
                         break;
                     }
                 }

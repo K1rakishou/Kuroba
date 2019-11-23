@@ -33,12 +33,12 @@ import com.google.gson.Gson;
 
 public class SpannableStringMapper {
     private static final String TAG = "SpannableStringMapper";
-    private static final Gson gson = new Gson()
-            .newBuilder()
-            .create();
 
     @Nullable
-    public static SerializableSpannableString serializeSpannableString(@Nullable CharSequence charSequence) {
+    public static SerializableSpannableString serializeSpannableString(
+            Gson gson,
+            @Nullable CharSequence charSequence
+    ) {
         if (charSequence == null || charSequence.length() == 0) {
             return null;
         }
@@ -145,7 +145,14 @@ public class SpannableStringMapper {
 
             if (span instanceof PostLinkable) {
                 PostLinkable pl = (PostLinkable) span;
-                serializePostLinkable(serializableSpannableString, pl, spanStart, spanEnd, flags);
+                serializePostLinkable(
+                        gson,
+                        serializableSpannableString,
+                        pl,
+                        spanStart,
+                        spanEnd,
+                        flags
+                );
             }
         }
 
@@ -154,6 +161,7 @@ public class SpannableStringMapper {
     }
 
     private static void serializePostLinkable(
+            Gson gson,
             SerializableSpannableString serializableSpannableString,
             PostLinkable postLinkable,
             int spanStart,
@@ -237,7 +245,10 @@ public class SpannableStringMapper {
 
     @NonNull
     public static CharSequence deserializeSpannableString(
-            @Nullable SerializableSpannableString serializableSpannableString) {
+            ThemeHelper themeHelper,
+            Gson gson,
+            @Nullable SerializableSpannableString serializableSpannableString
+    ) {
         if (serializableSpannableString == null || serializableSpannableString.getText().isEmpty()) {
             return "";
         }
@@ -309,7 +320,13 @@ public class SpannableStringMapper {
                             spanInfo.getFlags());
                     break;
                 case PostLinkable:
-                    deserializeAndApplyPostLinkableSpan(spannableString, spanInfo);
+                    deserializeAndApplyPostLinkableSpan(
+                            themeHelper,
+                            gson,
+                            spannableString,
+                            spanInfo
+                    );
+
                     break;
             }
         }
@@ -318,14 +335,17 @@ public class SpannableStringMapper {
     }
 
     private static void deserializeAndApplyPostLinkableSpan(
+            ThemeHelper themeHelper,
+            Gson gson,
             SpannableString spannableString,
-            SerializableSpannableString.SpanInfo spanInfo) {
+            SerializableSpannableString.SpanInfo spanInfo
+    ) {
 
         SerializablePostLinkableSpan serializablePostLinkableSpan = gson.fromJson(
                 spanInfo.getSpanData(),
                 SerializablePostLinkableSpan.class);
 
-        Theme currentTheme = ThemeHelper.getTheme();
+        Theme currentTheme = themeHelper.getTheme();
         PostLinkable postLinkable;
 
         switch (serializablePostLinkableSpan.getPostLinkableType()) {

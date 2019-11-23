@@ -19,7 +19,9 @@ import com.github.adamantcheese.chan.core.site.http.DeleteRequest;
 import com.github.adamantcheese.chan.core.site.http.HttpCall;
 import com.github.adamantcheese.chan.core.site.http.Reply;
 import com.github.adamantcheese.chan.core.site.parser.CommentParser;
+import com.github.adamantcheese.chan.core.site.parser.CommentParserHelper;
 import com.github.adamantcheese.chan.core.site.sites.chan4.Chan4;
+import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 import com.github.adamantcheese.chan.utils.Logger;
 
 import java.util.ArrayList;
@@ -32,7 +34,6 @@ import okhttp3.HttpUrl;
 
 public class Dvach extends CommonSite {
     private static final String TAG = "Dvach";
-
     public static final CommonSiteUrlHandler URL_HANDLER = new CommonSiteUrlHandler() {
         @Override
         public Class<? extends Site> getSiteClass() {
@@ -63,7 +64,6 @@ public class Dvach extends CommonSite {
             }
         }
     };
-
     static final String CAPTCHA_KEY = "6LeQYz4UAAAAAL8JCk35wHSv6cuEV5PyLhI6IxsM";
 
     private OptionsSetting<Chan4.CaptchaType> captchaType;
@@ -87,14 +87,18 @@ public class Dvach extends CommonSite {
     }
 
     @Override
-    public void setParser(CommentParser commentParser) {
-        this.postParser = new DvachPostParser(commentParser);
+    public void setParser(
+            ThemeHelper themeHelper,
+            CommentParser commentParser,
+            CommentParserHelper commentParserHelper
+    ) {
+        this.postParser = new DvachPostParser(themeHelper, commentParser, commentParserHelper);
     }
 
     @Override
     public void setup() {
         setName("2ch.hk");
-        setIcon(SiteIcon.fromFavicon(HttpUrl.parse("https://2ch.hk/favicon.ico")));
+        setIcon(SiteIcon.fromFavicon(imageLoaderV2, HttpUrl.parse("https://2ch.hk/favicon.ico")));
         setBoardsType(BoardsType.DYNAMIC);
 
         setResolvable(URL_HANDLER);
@@ -130,7 +134,7 @@ public class Dvach extends CommonSite {
             }
         });
 
-        setActions(new VichanActions(this) {
+        setActions(new VichanActions(okHttpClient, this) {
 
             @Override
             public void setupPost(Reply reply, MultipartHttpCall call) {
@@ -209,7 +213,6 @@ public class Dvach extends CommonSite {
         });
 
         setApi(new DvachApi(this));
-
-        setParser(new DvachCommentParser());
+        setParser(themeHelper, new DvachCommentParser(), commentParserHelper);
     }
 }

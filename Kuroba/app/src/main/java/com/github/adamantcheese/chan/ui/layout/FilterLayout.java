@@ -55,6 +55,7 @@ import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 import com.github.adamantcheese.chan.ui.view.ColorPickerView;
 import com.github.adamantcheese.chan.ui.view.FloatingMenu;
 import com.github.adamantcheese.chan.ui.view.FloatingMenuItem;
+import com.github.adamantcheese.chan.utils.AndroidUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +63,6 @@ import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAttrColor;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getString;
@@ -85,29 +85,36 @@ public class FilterLayout extends LinearLayout implements View.OnClickListener {
 
     @Inject
     BoardManager boardManager;
-
     @Inject
     FilterEngine filterEngine;
+    @Inject
+    ThemeHelper themeHelper;
 
     private FilterLayoutCallback callback;
     private Filter filter;
 
     public FilterLayout(Context context) {
         super(context);
+        init();
     }
 
     public FilterLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
+        init();
     }
 
     public FilterLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        init();
+    }
+
+    private void init() {
+        AndroidUtils.extractStartActivityComponent(getContext()).inject(this);
     }
 
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
-        inject(this);
 
         typeText = findViewById(R.id.type);
         boardsSelector = findViewById(R.id.boards);
@@ -147,7 +154,7 @@ public class FilterLayout extends LinearLayout implements View.OnClickListener {
         patternPreviewStatus = findViewById(R.id.pattern_preview_status);
         enabled = findViewById(R.id.enabled);
         help = findViewById(R.id.help);
-        ThemeHelper.getTheme().helpDrawable.apply(help);
+        themeHelper.getTheme().helpDrawable.apply(help);
         help.setOnClickListener(this);
         colorContainer = findViewById(R.id.color_container);
         colorContainer.setOnClickListener(this);
@@ -168,14 +175,14 @@ public class FilterLayout extends LinearLayout implements View.OnClickListener {
         actionText.setCompoundDrawablesWithIntrinsicBounds(null, null, new DropdownArrowDrawable(dp(12), dp(12), true,
                 getAttrColor(getContext(), R.attr.dropdown_dark_color), getAttrColor(getContext(), R.attr.dropdown_dark_pressed_color)), null);
 
-        enabled.setButtonTintList(ColorStateList.valueOf(ThemeHelper.getTheme().textPrimary));
-        enabled.setTextColor(ColorStateList.valueOf(ThemeHelper.getTheme().textPrimary));
-        applyToReplies.setButtonTintList(ColorStateList.valueOf(ThemeHelper.getTheme().textPrimary));
-        applyToReplies.setTextColor(ColorStateList.valueOf(ThemeHelper.getTheme().textPrimary));
-        onlyOnOP.setButtonTintList(ColorStateList.valueOf(ThemeHelper.getTheme().textPrimary));
-        onlyOnOP.setTextColor(ColorStateList.valueOf(ThemeHelper.getTheme().textPrimary));
-        applyToSaved.setButtonTintList(ColorStateList.valueOf(ThemeHelper.getTheme().textPrimary));
-        applyToSaved.setTextColor(ColorStateList.valueOf(ThemeHelper.getTheme().textPrimary));
+        enabled.setButtonTintList(ColorStateList.valueOf(themeHelper.getTheme().textPrimary));
+        enabled.setTextColor(ColorStateList.valueOf(themeHelper.getTheme().textPrimary));
+        applyToReplies.setButtonTintList(ColorStateList.valueOf(themeHelper.getTheme().textPrimary));
+        applyToReplies.setTextColor(ColorStateList.valueOf(themeHelper.getTheme().textPrimary));
+        onlyOnOP.setButtonTintList(ColorStateList.valueOf(themeHelper.getTheme().textPrimary));
+        onlyOnOP.setTextColor(ColorStateList.valueOf(themeHelper.getTheme().textPrimary));
+        applyToSaved.setButtonTintList(ColorStateList.valueOf(themeHelper.getTheme().textPrimary));
+        applyToSaved.setTextColor(ColorStateList.valueOf(themeHelper.getTheme().textPrimary));
     }
 
     public void setFilter(Filter filter) {

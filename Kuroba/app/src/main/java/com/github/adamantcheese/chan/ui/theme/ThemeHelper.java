@@ -24,7 +24,6 @@ import android.graphics.Typeface;
 
 import androidx.annotation.AnyThread;
 
-import com.github.adamantcheese.chan.Chan;
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.core.settings.ChanSettings;
 import com.github.adamantcheese.chan.utils.Logger;
@@ -37,7 +36,6 @@ import static com.github.adamantcheese.chan.utils.AndroidUtils.getAppContext;
 
 public class ThemeHelper {
     private static final String TAG = "ThemeHelper";
-
     private List<Theme> themes = new ArrayList<>();
 
     private Theme theme;
@@ -104,8 +102,8 @@ public class ThemeHelper {
     }
 
     @AnyThread
-    public static Theme getTheme() {
-        return Chan.injector().instance(ThemeHelper.class).theme;
+    public Theme getTheme() {
+        return theme;
     }
 
     public List<Theme> getThemes() {

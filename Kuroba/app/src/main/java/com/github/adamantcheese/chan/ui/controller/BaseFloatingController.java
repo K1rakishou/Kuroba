@@ -5,6 +5,7 @@ import android.content.Context;
 import android.view.Window;
 
 import com.github.adamantcheese.chan.controller.Controller;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.utils.AndroidUtils;
 
 public abstract class BaseFloatingController extends Controller {
@@ -13,6 +14,11 @@ public abstract class BaseFloatingController extends Controller {
 
     public BaseFloatingController(Context context) {
         super(context);
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     @Override

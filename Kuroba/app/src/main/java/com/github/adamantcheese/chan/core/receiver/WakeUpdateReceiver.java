@@ -20,12 +20,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import com.github.adamantcheese.chan.Chan;
 import com.github.adamantcheese.chan.core.manager.WakeManager;
 import com.github.adamantcheese.chan.utils.Logger;
 
 import javax.inject.Inject;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 
 public class WakeUpdateReceiver extends BroadcastReceiver {
     private static final String TAG = "WakeUpdateReceiver";
@@ -34,7 +34,7 @@ public class WakeUpdateReceiver extends BroadcastReceiver {
     WakeManager wakeManager;
 
     public WakeUpdateReceiver() {
-        inject(this);
+        Chan.getComponent().inject(this);
     }
 
     @Override

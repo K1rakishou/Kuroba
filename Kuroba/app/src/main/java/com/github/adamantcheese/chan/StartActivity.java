@@ -37,8 +37,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.github.adamantcheese.chan.controller.Controller;
 import com.github.adamantcheese.chan.controller.NavigationController;
+import com.github.adamantcheese.chan.core.cache.FileCache;
 import com.github.adamantcheese.chan.core.database.DatabaseLoadableManager;
 import com.github.adamantcheese.chan.core.database.DatabaseManager;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
+import com.github.adamantcheese.chan.core.di.module.activity.StartActivityModule;
+import com.github.adamantcheese.chan.core.manager.ReplyManager;
 import com.github.adamantcheese.chan.core.manager.UpdateManager;
 import com.github.adamantcheese.chan.core.manager.WatchManager;
 import com.github.adamantcheese.chan.core.model.orm.Board;
@@ -62,6 +66,7 @@ import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 import com.github.adamantcheese.chan.utils.AndroidUtils;
 import com.github.adamantcheese.chan.utils.Logger;
 import com.github.k1rakishou.fsaf.FileChooser;
+import com.github.k1rakishou.fsaf.FileManager;
 import com.github.k1rakishou.fsaf.callback.FSAFActivityCallbacks;
 
 import org.jetbrains.annotations.NotNull;
@@ -74,7 +79,6 @@ import java.util.List;
 import javax.inject.Inject;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getApplicationLabel;
 
 public class StartActivity
@@ -82,7 +86,6 @@ public class StartActivity
         implements NfcAdapter.CreateNdefMessageCallback,
         FSAFActivityCallbacks {
     private static final String TAG = "StartActivity";
-
     private static final String STATE_KEY = "chan_state";
 
     private ViewGroup contentView;
@@ -92,13 +95,15 @@ public class StartActivity
     private NavigationController mainNavigationController;
     private BrowseController browseController;
 
-    private ImagePickDelegate imagePickDelegate;
-    private RuntimePermissionsHelper runtimePermissionsHelper;
-    private UpdateManager updateManager;
-
     private boolean intentMismatchWorkaroundActive = false;
     private boolean exitFlag = false;
 
+    private StartActivityComponent startActivityComponent;
+
+    @Inject
+    ImagePickDelegate imagePickDelegate;
+    @Inject
+    RuntimePermissionsHelper runtimePermissionsHelper;
     @Inject
     DatabaseManager databaseManager;
     @Inject
@@ -109,22 +114,40 @@ public class StartActivity
     SiteService siteService;
     @Inject
     FileChooser fileChooser;
+    @Inject
+    ThemeHelper themeHelper;
+    @Inject
+    SiteRepository siteRepository;
+    @Inject
+    UpdateManager updateManager;
+    @Inject
+    ReplyManager replyManager;
+    @Inject
+    FileManager fileManager;
+    @Inject
+    FileCache fileCache;
+
+    public StartActivityComponent getComponent() {
+        return startActivityComponent;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        inject(this);
 
         if (intentMismatchWorkaround()) {
             return;
         }
 
-        Chan.injector().instance(ThemeHelper.class).setupContext(this);
+        startActivityComponent = Chan.getComponent()
+                .activityComponentBuilder()
+                .startActivity(this)
+                .startActivityModule(new StartActivityModule())
+                .build();
+        startActivityComponent.inject(this);
 
+        themeHelper.setupContext(this);
         fileChooser.setCallbacks(this);
-        imagePickDelegate = new ImagePickDelegate(this);
-        runtimePermissionsHelper = new RuntimePermissionsHelper(this);
-        updateManager = new UpdateManager(this);
 
         contentView = findViewById(android.R.id.content);
 
@@ -259,7 +282,7 @@ public class StartActivity
             return null;
         }
 
-        Site site = Chan.injector().instance(SiteRepository.class).forId(stateLoadable.siteId);
+        Site site = siteRepository.forId(stateLoadable.siteId);
         if (site != null) {
             Board board = site.board(stateLoadable.boardCode);
             if (board != null) {

@@ -16,7 +16,6 @@
  */
 package com.github.adamantcheese.chan.utils;
 
-import android.content.Context;
 import android.os.Looper;
 
 import com.github.adamantcheese.chan.BuildConfig;
@@ -29,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class BackgroundUtils {
 
     public static boolean isInForeground() {
-        return ((Chan) Chan.injector().instance(Context.class)).getApplicationInForeground();
+        return Chan.getComponent().getApplication().getApplicationInForeground();
     }
 
     public static boolean isMainThread() {

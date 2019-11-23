@@ -20,6 +20,7 @@ import android.content.Context;
 
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.controller.ui.NavigationControllerContainerLayout;
+import com.github.adamantcheese.chan.core.di.component.activity.StartActivityComponent;
 import com.github.adamantcheese.chan.core.model.PostImage;
 import com.github.adamantcheese.chan.core.model.orm.Loadable;
 
@@ -42,6 +43,11 @@ public class ImageViewerNavigationController extends ToolbarNavigationController
         nav.setSwipeEnabled(false);
         toolbar = view.findViewById(R.id.toolbar);
         toolbar.setCallback(this);
+    }
+
+    @Override
+    protected void injectDependencies(StartActivityComponent component) {
+        component.inject(this);
     }
 
     public void showImages(final List<PostImage> images, final int index, final Loadable loadable,

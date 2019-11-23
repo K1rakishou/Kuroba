@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ArchivesManager implements SiteActions.ArchiveRequestListener {
-    private List<Archives> archivesList;
+    private List<Archives> archivesList = new ArrayList<>();
 
     public ArchivesManager(Site s) {
         s.actions().archives(this);
@@ -46,7 +46,8 @@ public class ArchivesManager implements SiteActions.ArchiveRequestListener {
 
     @Override
     public void onArchivesReceived(List<Archives> archives) {
-        archivesList = archives;
+        archivesList.clear();
+        archivesList.addAll(archives);
     }
 
     public static class Archives {

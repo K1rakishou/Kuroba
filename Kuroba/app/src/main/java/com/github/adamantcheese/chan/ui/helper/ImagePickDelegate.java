@@ -26,7 +26,6 @@ import android.os.ParcelFileDescriptor;
 import android.provider.OpenableColumns;
 import android.widget.Toast;
 
-import com.github.adamantcheese.chan.Chan;
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.core.cache.FileCache;
 import com.github.adamantcheese.chan.core.cache.FileCacheListener;
@@ -47,7 +46,6 @@ import javax.inject.Inject;
 
 import okhttp3.HttpUrl;
 
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAppContext;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.runOnUiThread;
 
@@ -58,11 +56,9 @@ public class ImagePickDelegate implements Runnable {
     private static final long MAX_FILE_SIZE = 15 * 1024 * 1024;
     private static final String DEFAULT_FILE_NAME = "file";
 
-    @Inject
-    ReplyManager replyManager;
-    @Inject
-    FileManager fileManager;
-
+    private ReplyManager replyManager;
+    private FileManager fileManager;
+    private FileCache fileCache;
     private Activity activity;
 
     private ImagePickCallback callback;
@@ -71,9 +67,17 @@ public class ImagePickDelegate implements Runnable {
     private boolean success = false;
     private RawFile cacheFile;
 
-    public ImagePickDelegate(Activity activity) {
+    @Inject
+    public ImagePickDelegate(
+            Activity activity,
+            ReplyManager replyManager,
+            FileManager fileManager,
+            FileCache fileCache
+    ) {
         this.activity = activity;
-        inject(this);
+        this.replyManager = replyManager;
+        this.fileManager = fileManager;
+        this.fileCache = fileCache;
     }
 
     public void pick(ImagePickCallback callback, boolean longPressed) {
@@ -95,7 +99,7 @@ public class ImagePickDelegate implements Runnable {
                 }
                 if (clipboardURL != null) {
                     HttpUrl finalClipboardURL = clipboardURL;
-                    Chan.injector().instance(FileCache.class).downloadFile(clipboardURL.toString(), new FileCacheListener() {
+                    fileCache.downloadFile(clipboardURL.toString(), new FileCacheListener() {
                         @Override
                         public void onSuccess(RawFile file) {
                             BackgroundUtils.ensureMainThread();

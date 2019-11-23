@@ -4,7 +4,10 @@ import android.text.TextUtils;
 import android.util.Pair;
 import android.util.SparseArray;
 
+import com.android.volley.RequestQueue;
 import com.github.adamantcheese.chan.core.database.DatabaseManager;
+import com.github.adamantcheese.chan.core.image.ImageLoaderV2;
+import com.github.adamantcheese.chan.core.manager.BoardManager;
 import com.github.adamantcheese.chan.core.model.json.site.SiteConfig;
 import com.github.adamantcheese.chan.core.model.orm.Filter;
 import com.github.adamantcheese.chan.core.model.orm.Loadable;
@@ -12,7 +15,13 @@ import com.github.adamantcheese.chan.core.model.orm.SiteModel;
 import com.github.adamantcheese.chan.core.settings.json.JsonSettings;
 import com.github.adamantcheese.chan.core.site.Site;
 import com.github.adamantcheese.chan.core.site.SiteRegistry;
+import com.github.adamantcheese.chan.core.site.SiteService;
+import com.github.adamantcheese.chan.core.site.http.HttpCallManager;
+import com.github.adamantcheese.chan.core.site.parser.CommentParser;
+import com.github.adamantcheese.chan.core.site.parser.CommentParserHelper;
+import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 import com.github.adamantcheese.chan.utils.Logger;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,11 +31,12 @@ import java.util.Observable;
 
 import javax.inject.Inject;
 
+import okhttp3.OkHttpClient;
+
 public class SiteRepository {
     private static final String TAG = "SiteRepository";
 
     private DatabaseManager databaseManager;
-
     private Sites sitesObservable = new Sites();
 
     public Site forId(int id) {
@@ -52,8 +62,8 @@ public class SiteRepository {
                 .updateId(siteModel, id));
     }
 
-    public void updateSiteUserSettingsAsync(SiteModel siteModel, JsonSettings jsonSettings) {
-        siteModel.storeUserSettings(jsonSettings);
+    public void updateSiteUserSettingsAsync(Gson gson, SiteModel siteModel, JsonSettings jsonSettings) {
+        siteModel.storeUserSettings(gson, jsonSettings);
         databaseManager.runTaskAsync(databaseManager.getDatabaseSiteManager()
                 .update(siteModel));
     }
@@ -76,7 +86,19 @@ public class SiteRepository {
                 });
     }
 
-    public void initialize() {
+    public void initialize(
+            OkHttpClient okHttpClient,
+            DatabaseManager databaseManager,
+            ImageLoaderV2 imageLoaderV2,
+            HttpCallManager httpCallManager,
+            RequestQueue requestQueue,
+            BoardManager boardManager,
+            CommentParser commentParser,
+            CommentParserHelper commentParserHelper,
+            SiteService siteService,
+            ThemeHelper themeHelper,
+            Gson gson
+    ) {
         List<Site> sites = new ArrayList<>();
 
         List<SiteModel> models = databaseManager.runTask(
@@ -85,7 +107,7 @@ public class SiteRepository {
         for (SiteModel siteModel : models) {
             SiteConfigSettingsHolder holder;
             try {
-                holder = instantiateSiteFromModel(siteModel);
+                holder = instantiateSiteFromModel(gson, siteModel);
             } catch (IllegalArgumentException e) {
                 Logger.e(TAG, "instantiateSiteFromModel", e);
                 break;
@@ -95,7 +117,20 @@ public class SiteRepository {
             SiteConfig config = holder.config;
             JsonSettings settings = holder.settings;
 
-            site.initialize(siteModel.id, config, settings);
+            site.initialize(
+                    siteModel.id,
+                    okHttpClient,
+                    imageLoaderV2,
+                    config,
+                    settings,
+                    httpCallManager,
+                    requestQueue,
+                    boardManager,
+                    commentParser,
+                    commentParserHelper,
+                    siteService,
+                    themeHelper
+            );
 
             sites.add(site);
         }
@@ -109,7 +144,19 @@ public class SiteRepository {
         sitesObservable.notifyObservers();
     }
 
-    public Site createFromClass(Class<? extends Site> siteClass) {
+    public Site createFromClass(
+            Class<? extends Site> siteClass,
+            OkHttpClient okHttpClient,
+            ImageLoaderV2 imageLoaderV2,
+            HttpCallManager httpCallManager,
+            RequestQueue requestQueue,
+            BoardManager boardManager,
+            CommentParser commentParser,
+            CommentParserHelper commentParserHelper,
+            SiteService siteService,
+            ThemeHelper themeHelper,
+            Gson gson
+    ) {
         Site site = instantiateSiteClass(siteClass);
 
         SiteConfig config = new SiteConfig();
@@ -119,9 +166,22 @@ public class SiteRepository {
         config.classId = SiteRegistry.SITE_CLASSES.keyAt(SiteRegistry.SITE_CLASSES.indexOfValue(site.getClass()));
         config.external = false;
 
-        SiteModel model = createFromClass(config, settings);
+        SiteModel model = createFromClass(gson, config, settings);
 
-        site.initialize(model.id, config, settings);
+        site.initialize(
+                model.id,
+                okHttpClient,
+                imageLoaderV2,
+                config,
+                settings,
+                httpCallManager,
+                requestQueue,
+                boardManager,
+                commentParser,
+                commentParserHelper,
+                siteService,
+                themeHelper
+        );
 
         sitesObservable.add(site);
 
@@ -132,17 +192,17 @@ public class SiteRepository {
         return site;
     }
 
-    private SiteModel createFromClass(SiteConfig config, JsonSettings userSettings) {
+    private SiteModel createFromClass(Gson gson, SiteConfig config, JsonSettings userSettings) {
         SiteModel siteModel = new SiteModel();
-        siteModel.storeConfig(config);
-        siteModel.storeUserSettings(userSettings);
+        siteModel.storeConfig(gson, config);
+        siteModel.storeUserSettings(gson, userSettings);
         databaseManager.runTask(databaseManager.getDatabaseSiteManager().add(siteModel));
 
         return siteModel;
     }
 
-    private SiteConfigSettingsHolder instantiateSiteFromModel(SiteModel siteModel) {
-        Pair<SiteConfig, JsonSettings> configFields = siteModel.loadConfigFields();
+    private SiteConfigSettingsHolder instantiateSiteFromModel(Gson gson, SiteModel siteModel) {
+        Pair<SiteConfig, JsonSettings> configFields = siteModel.loadConfigFields(gson);
         SiteConfig config = configFields.first;
         JsonSettings settings = configFields.second;
 

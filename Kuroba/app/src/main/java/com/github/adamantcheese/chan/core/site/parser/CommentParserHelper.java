@@ -28,7 +28,6 @@ import androidx.annotation.AnyThread;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.RequestFuture;
-import com.github.adamantcheese.chan.Chan;
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.core.model.Post;
 import com.github.adamantcheese.chan.core.model.PostImage;
@@ -82,6 +81,12 @@ public class CommentParserHelper {
     private static final Pattern nonsPattern = Pattern.compile("(\\d)\\1{8}$");
     private static final Pattern decsPattern = Pattern.compile("(\\d)\\1{9}$");
 
+    private final RequestQueue requestQueue;
+
+    public CommentParserHelper(RequestQueue requestQueue) {
+        this.requestQueue = requestQueue;
+    }
+
     /**
      * Detect links in the given spannable, and create PostLinkables with Type.LINK for the
      * links found onto the spannable.
@@ -93,7 +98,7 @@ public class CommentParserHelper {
      * @param text      Text to find links in
      * @param spannable Spannable to set the spans on.
      */
-    public static void detectLinks(Theme theme, Post.Builder post, String text, SpannableString spannable) {
+    public void detectLinks(Theme theme, Post.Builder post, String text, SpannableString spannable) {
         final Iterable<LinkSpan> links = LINK_EXTRACTOR.extractLinks(text);
         for (final LinkSpan link : links) {
             final String linkText = text.substring(link.getBeginIndex(), link.getEndIndex());
@@ -105,7 +110,7 @@ public class CommentParserHelper {
         }
     }
 
-    public static SpannableString replaceYoutubeLinks(Theme theme, Post.Builder post, String text) {
+    public SpannableString replaceYoutubeLinks(Theme theme, Post.Builder post, String text) {
         Map<String, String> titleURLMap = new HashMap<>(); //this map is inverted i.e. the title maps to the URL rather than the other way around
         StringBuffer newString = new StringBuffer();
         //find and replace all youtube URLs with their titles, but keep track in the map above for spans later
@@ -122,7 +127,7 @@ public class CommentParserHelper {
                             (ChanSettings.parseYoutubeDuration.get() ? "%2CcontentDetails%28duration%29" : "") +
                             "%29&key=" + API_KEY,
                     null, future, future);
-            Chan.injector().instance(RequestQueue.class).add(request);
+            requestQueue.add(request);
 
             String URL = linkMatcher.group(0);
             String title = youtubeTitleCache.get(URL);
@@ -183,7 +188,7 @@ public class CommentParserHelper {
         return finalizedString;
     }
 
-    public static void addPostImages(Post.Builder post) {
+    public void addPostImages(Post.Builder post) {
         if (ChanSettings.parsePostImageLinks.get()) {
             for (PostLinkable linkable : post.getLinkables()) {
                 if (post.images != null && post.images.size() >= 5) return; //max 5 images hotlinked
