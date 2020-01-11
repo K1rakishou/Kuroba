@@ -287,9 +287,7 @@ public class BrowseController
     private void handleShareAndOpenInBrowser(ThreadPresenter presenter, boolean share) {
         if (presenter.isBound()) {
             Loadable loadable = presenter.getLoadable();
-
-            // -1 because we share the thread so we don't need the postNo
-            String link = loadable.site.resolvable().desktopUrl(loadable, -1);
+            String link = loadable.site.resolvable().desktopUrlForThread(loadable);
 
             if (share) {
                 shareLink(link);

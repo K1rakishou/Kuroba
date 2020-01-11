@@ -252,7 +252,7 @@ public class CommentParser {
             Site site = builder.board.site;
 
             String link =
-                    site.resolvable().desktopUrl(
+                    site.resolvable().desktopUrlForPost(
                             Loadable.forThread(site, builder.board, postNo, ""),
                             builder.id
                     );

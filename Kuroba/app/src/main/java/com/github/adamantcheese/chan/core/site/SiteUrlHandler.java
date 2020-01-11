@@ -20,14 +20,19 @@ import com.github.adamantcheese.chan.core.model.orm.Loadable;
 
 import okhttp3.HttpUrl;
 
-public interface SiteUrlHandler {
-    Class<? extends Site> getSiteClass();
+public abstract class SiteUrlHandler {
+    abstract public Class<? extends Site> getSiteClass();
 
-    boolean matchesName(String value);
+    abstract public boolean matchesName(String value);
 
-    boolean respondsTo(HttpUrl url);
+    abstract public boolean respondsTo(HttpUrl url);
 
-    String desktopUrl(Loadable loadable, final int postNo);
+    public String desktopUrlForThread(Loadable loadable) {
+        // -1 here means that we only want to get a link for a thread
+        return desktopUrlForPost(loadable, -1);
+    }
 
-    Loadable resolveLoadable(Site site, HttpUrl url);
+    abstract public String desktopUrlForPost(Loadable loadable, final int postNo);
+
+    abstract public Loadable resolveLoadable(Site site, HttpUrl url);
 }

@@ -84,7 +84,7 @@ public class Chan4
         }
 
         @Override
-        public String desktopUrl(Loadable loadable, final int postNo) {
+        public String desktopUrlForPost(Loadable loadable, final int postNo) {
             if (loadable.isCatalogMode()) {
                 if (postNo > 0) {
                     return "https://boards.4chan.org/" + loadable.board.code + "/thread/" + postNo;

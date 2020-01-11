@@ -286,17 +286,13 @@ public class ViewThreadController
 
     private void openBrowserClicked(ToolbarMenuSubItem item) {
         Loadable loadable = threadLayout.getPresenter().getLoadable();
-
-        // -1 because we share the thread so we don't need the postNo
-        String link = loadable.site.resolvable().desktopUrl(loadable, -1);
+        String link = loadable.site.resolvable().desktopUrlForThread(loadable);
         openLinkInBrowser((Activity) context, link);
     }
 
     private void shareClicked(ToolbarMenuSubItem item) {
         Loadable loadable = threadLayout.getPresenter().getLoadable();
-
-        // -1 because we share the thread so we don't need the postNo
-        String link = loadable.site.resolvable().desktopUrl(loadable, -1);
+        String link = loadable.site.resolvable().desktopUrlForThread(loadable);
         shareLink(link);
     }
 
@@ -726,9 +722,7 @@ public class ViewThreadController
     @Override
     public void openArchive(Pair<String, String> domainNamePair) {
         Loadable loadable = threadLayout.getPresenter().getLoadable();
-
-        // -1 because we share the thread so we don't need the postNo
-        String link = loadable.site.resolvable().desktopUrl(loadable, -1);
+        String link = loadable.site.resolvable().desktopUrlForThread(loadable);
         link = link.replace("https://boards.4chan.org/", "https://" + domainNamePair.second + "/");
         openLinkInBrowser((Activity) context, link);
     }

@@ -47,7 +47,7 @@ public class Sushichan
         }
 
         @Override
-        public String desktopUrl(Loadable loadable, final int postNo) {
+        public String desktopUrlForPost(Loadable loadable, final int postNo) {
             if (loadable.isCatalogMode()) {
                 return getUrl().newBuilder().addPathSegment(loadable.boardCode).toString();
             } else if (loadable.isThreadMode()) {

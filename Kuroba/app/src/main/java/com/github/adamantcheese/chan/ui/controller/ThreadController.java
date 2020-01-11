@@ -156,11 +156,7 @@ public abstract class ThreadController
         NdefMessage message = null;
 
         if (loadable != null) {
-            url = loadable.site.resolvable().desktopUrl(
-                    loadable,
-                    // -1 because we share the thread so we don't need the postNo
-                    -1
-            );
+            url = loadable.site.resolvable().desktopUrlForThread(loadable);
         }
 
         if (url != null) {

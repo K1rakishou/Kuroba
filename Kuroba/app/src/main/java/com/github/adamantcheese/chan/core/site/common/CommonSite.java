@@ -234,7 +234,7 @@ public abstract class CommonSite
     }
 
     public static abstract class CommonSiteUrlHandler
-            implements SiteUrlHandler {
+            extends SiteUrlHandler {
         public abstract HttpUrl getUrl();
 
         public abstract String[] getNames();
@@ -256,7 +256,7 @@ public abstract class CommonSite
         }
 
         @Override
-        public String desktopUrl(Loadable loadable, final int postNo) {
+        public String desktopUrlForPost(Loadable loadable, final int postNo) {
             if (loadable.isCatalogMode()) {
                 return getUrl().newBuilder().addPathSegment(loadable.boardCode).toString();
             } else if (loadable.isThreadMode()) {

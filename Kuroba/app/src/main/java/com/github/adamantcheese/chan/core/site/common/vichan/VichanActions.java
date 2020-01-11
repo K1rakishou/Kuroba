@@ -79,7 +79,7 @@ public class VichanActions
     @Override
     public void prepare(MultipartHttpCall call, Reply reply, ReplyResponse replyResponse) {
         VichanAntispam antispam = new VichanAntispam(
-                HttpUrl.parse(site.resolvable().desktopUrl(reply.loadable, -1))
+                HttpUrl.parse(site.resolvable().desktopUrlForThread(reply.loadable))
         );
 
         antispam.addDefaultIgnoreFields();
