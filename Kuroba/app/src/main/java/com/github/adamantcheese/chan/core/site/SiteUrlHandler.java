@@ -16,9 +16,6 @@
  */
 package com.github.adamantcheese.chan.core.site;
 
-import androidx.annotation.Nullable;
-
-import com.github.adamantcheese.chan.core.model.Post;
 import com.github.adamantcheese.chan.core.model.orm.Loadable;
 
 import okhttp3.HttpUrl;
@@ -30,7 +27,7 @@ public interface SiteUrlHandler {
 
     boolean respondsTo(HttpUrl url);
 
-    String desktopUrl(Loadable loadable, @Nullable final Post post);
+    String desktopUrl(Loadable loadable, final int postNo);
 
     Loadable resolveLoadable(Site site, HttpUrl url);
 }
