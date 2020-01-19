@@ -285,26 +285,14 @@ public class ViewThreadController
     }
 
     private void openBrowserClicked(ToolbarMenuSubItem item) {
-        if (threadLayout.getPresenter().getChanThread() == null) {
-            showToast(R.string.cannot_open_in_browser_already_deleted);
-            return;
-        }
-
         Loadable loadable = threadLayout.getPresenter().getLoadable();
-        String link =
-                loadable.site.resolvable().desktopUrl(loadable, threadLayout.getPresenter().getChanThread().getOp());
+        String link = loadable.site.resolvable().desktopUrlForThread(loadable);
         openLinkInBrowser((Activity) context, link);
     }
 
     private void shareClicked(ToolbarMenuSubItem item) {
-        if (threadLayout.getPresenter().getChanThread() == null) {
-            showToast(R.string.cannot_shared_thread_already_deleted);
-            return;
-        }
-
         Loadable loadable = threadLayout.getPresenter().getLoadable();
-        String link =
-                loadable.site.resolvable().desktopUrl(loadable, threadLayout.getPresenter().getChanThread().getOp());
+        String link = loadable.site.resolvable().desktopUrlForThread(loadable);
         shareLink(link);
     }
 
@@ -734,13 +722,7 @@ public class ViewThreadController
     @Override
     public void openArchive(Pair<String, String> domainNamePair) {
         Loadable loadable = threadLayout.getPresenter().getLoadable();
-        Post tempOP = new Post.Builder().board(loadable.board)
-                .id(loadable.no)
-                .opId(loadable.no)
-                .setUnixTimestampSeconds(1)
-                .comment("")
-                .build();
-        String link = loadable.site.resolvable().desktopUrl(loadable, tempOP);
+        String link = loadable.site.resolvable().desktopUrlForThread(loadable);
         link = link.replace("https://boards.4chan.org/", "https://" + domainNamePair.second + "/");
         openLinkInBrowser((Activity) context, link);
     }

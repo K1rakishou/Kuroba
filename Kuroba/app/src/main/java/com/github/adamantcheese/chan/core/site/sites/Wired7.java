@@ -16,9 +16,6 @@
  */
 package com.github.adamantcheese.chan.core.site.sites;
 
-import androidx.annotation.Nullable;
-
-import com.github.adamantcheese.chan.core.model.Post;
 import com.github.adamantcheese.chan.core.model.orm.Board;
 import com.github.adamantcheese.chan.core.model.orm.Loadable;
 import com.github.adamantcheese.chan.core.site.Site;
@@ -61,7 +58,7 @@ public class Wired7
         }
 
         @Override
-        public String desktopUrl(Loadable loadable, @Nullable final Post post) {
+        public String desktopUrlForPost(Loadable loadable, final int postNo) {
             if (loadable.isCatalogMode()) {
                 return getUrl().newBuilder().addPathSegment(loadable.boardCode).toString();
             } else if (loadable.isThreadMode()) {

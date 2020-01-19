@@ -156,7 +156,7 @@ public abstract class ThreadController
         NdefMessage message = null;
 
         if (loadable != null) {
-            url = loadable.site.resolvable().desktopUrl(loadable, threadLayout.getPresenter().getChanThread().getOp());
+            url = loadable.site.resolvable().desktopUrlForThread(loadable);
         }
 
         if (url != null) {

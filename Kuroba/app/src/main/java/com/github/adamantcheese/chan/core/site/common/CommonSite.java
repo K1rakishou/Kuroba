@@ -21,7 +21,6 @@ import android.os.Looper;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.github.adamantcheese.chan.core.model.Post;
 import com.github.adamantcheese.chan.core.model.json.site.SiteConfig;
@@ -235,7 +234,7 @@ public abstract class CommonSite
     }
 
     public static abstract class CommonSiteUrlHandler
-            implements SiteUrlHandler {
+            extends SiteUrlHandler {
         public abstract HttpUrl getUrl();
 
         public abstract String[] getNames();
@@ -257,7 +256,7 @@ public abstract class CommonSite
         }
 
         @Override
-        public String desktopUrl(Loadable loadable, @Nullable final Post post) {
+        public String desktopUrlForPost(Loadable loadable, final int postNo) {
             if (loadable.isCatalogMode()) {
                 return getUrl().newBuilder().addPathSegment(loadable.boardCode).toString();
             } else if (loadable.isThreadMode()) {
