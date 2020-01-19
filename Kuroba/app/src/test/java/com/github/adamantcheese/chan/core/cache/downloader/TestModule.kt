@@ -110,7 +110,7 @@ class TestModule {
             fileManager = FileManager(
                     provideContext(),
                     BadPathSymbolResolutionStrategy.ThrowAnException,
-                    DirectoryManager()
+                    DirectoryManager(provideContext())
             )
         }
 
