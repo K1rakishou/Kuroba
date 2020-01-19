@@ -23,7 +23,6 @@ import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
-import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -84,6 +83,7 @@ import pl.droidsonroids.gif.GifImageView;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 import static com.github.adamantcheese.chan.Chan.inject;
+import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAppContext;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAppFileProvider;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.openIntent;
@@ -113,23 +113,54 @@ public class MultiImageView
     @Nullable
     private Context context;
     private ImageView playView;
-    private GestureDetector exoDoubleTapDetector;
-    private GestureDetector gifDoubleTapDetector;
-
     private PostImage postImage;
     private Callback callback;
     private Mode mode = Mode.UNLOADED;
-
     private ImageContainer thumbnailRequest;
     private CancelableDownload bigImageRequest;
     private CancelableDownload gifRequest;
     private CancelableDownload videoRequest;
     private SimpleExoPlayer exoPlayer;
-    private CancellableToast cancellableToast;
-
-    private boolean hasContent = false;
-    private boolean mediaSourceCancel = false;
     private boolean backgroundToggle;
+    private boolean imageAlreadySaved = false;
+
+    private static final float FLING_DIFF_Y_THRESHOLD = dp(60f);
+    private static final float FLING_VELOCITY_Y_THRESHOLD = dp(200f);
+    private static final float FLING_DIST_X_THRESHOLD = dp(100f);
+
+    private GestureDetector swipeDetector = new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener() {
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float vx, float vy) {
+            CustomScaleImageView customScaleImageView = findScaleImageView();
+            if (customScaleImageView != null && (customScaleImageView.isZoomedIn())) {
+                // When CustomScaleImageView is added we need to check whether it's zoomed in and
+                // if it is then don't accept this motion event. Otherwise, when zoomed in,
+                // the image will lose the fling inertia.
+                return false;
+            }
+
+            float diffY = e2.getY() - e1.getY();
+            float diffX = e2.getX() - e1.getX();
+
+            if (
+                    Math.abs(diffY) > FLING_DIFF_Y_THRESHOLD
+                            && Math.abs(vy) > FLING_VELOCITY_Y_THRESHOLD
+                            && Math.abs(diffX) < FLING_DIST_X_THRESHOLD
+            ) {
+                if (diffY <= 0) {
+                    callback.onSwipeTop();
+                } else {
+                    if (imageAlreadySaved) {
+                        return false;
+                    }
+
+                    callback.onSwipeBottom();
+                    imageAlreadySaved = true;
+                }
+            }
+            return true;
+        }
+    });
 
     public MultiImageView(Context context) {
         this(context, null);
@@ -314,6 +345,7 @@ public class MultiImageView
                         {
                             ImageView thumbnail = new ImageView(getContext());
                             thumbnail.setImageBitmap(response.getBitmap());
+                            thumbnail.setOnTouchListener((view, motionEvent) -> swipeDetector.onTouchEvent(motionEvent));
 
                             onModeLoaded(Mode.LOWRES, thumbnail);
                         }
@@ -502,8 +534,9 @@ public class MultiImageView
 
         GifImageView view = new GifImageView(getContext());
         view.setImageDrawable(drawable);
+
         view.setOnClickListener(null);
-        view.setOnTouchListener((view1, motionEvent) -> gifDoubleTapDetector.onTouchEvent(motionEvent));
+        view.setOnTouchListener((view1, motionEvent) -> swipeDetector.onTouchEvent(motionEvent));
         onModeLoaded(Mode.GIFIMAGE, view);
     }
 
@@ -655,7 +688,7 @@ public class MultiImageView
 
             exoPlayer.prepare(videoSource);
             exoPlayer.addAudioListener(this);
-            exoVideoView.setOnTouchListener((view, motionEvent) -> exoDoubleTapDetector.onTouchEvent(motionEvent));
+            exoVideoView.setOnTouchListener((view, motionEvent) -> swipeDetector.onTouchEvent(motionEvent));
 
             addView(exoVideoView);
             exoPlayer.setPlayWhenReady(true);
@@ -744,6 +777,7 @@ public class MultiImageView
                 onBigImageError(wasInitial);
             }
         });
+        image.setOnTouchListener((view, motionEvent) -> swipeDetector.onTouchEvent(motionEvent));
     }
 
     private void onError(Exception exception) {
@@ -840,7 +874,9 @@ public class MultiImageView
     public interface Callback {
         void onTap();
 
-        void onDoubleTap();
+        void onSwipeTop();
+
+        void onSwipeBottom();
 
         void onStartDownload(MultiImageView multiImageView, int chunksCount);
 

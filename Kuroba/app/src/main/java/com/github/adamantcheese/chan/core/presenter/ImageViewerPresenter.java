@@ -497,8 +497,13 @@ public class ImageViewerPresenter
     }
 
     @Override
-    public void onDoubleTap() {
+    public void onSwipeTop() {
         onExit();
+    }
+
+    @Override
+    public void onSwipeBottom() {
+        callback.saveImage();
     }
 
     @Override
@@ -668,6 +673,8 @@ public class ImageViewerPresenter
         void setTitle(PostImage postImage, int index, int count, boolean spoiler);
 
         void scrollToImage(PostImage postImage);
+
+        void saveImage();
 
         MultiImageView.Mode getImageMode(PostImage postImage);
 

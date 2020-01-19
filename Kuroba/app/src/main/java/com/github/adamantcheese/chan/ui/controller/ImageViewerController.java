@@ -419,6 +419,16 @@ public class ImageViewerController
         imageViewerCallback.scrollToImage(postImage);
     }
 
+    public void saveImage() {
+        ToolbarMenuItem saveMenuItem = navigation.findItem(SAVE_ID);
+        if (saveMenuItem != null) {
+            saveMenuItem.setCallback(null);
+            saveMenuItem.getView().getDrawable().setTint(Color.GRAY);
+        }
+
+        saveShare(false, presenter.getCurrentPostImage());
+    }
+
     public void showProgress(boolean show) {
         int visibility = loadingBar.getVisibility();
         if ((visibility == VISIBLE && show) || (visibility == GONE && !show)) {
