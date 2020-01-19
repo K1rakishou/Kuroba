@@ -219,8 +219,7 @@ public class MediaSettingsController
                     R.string.setting_headset_default_muted_description
             ));
 
-            video.add(new BooleanSettingView(this,
-                    ChanSettings.videoOpenExternal,
+            video.add(new BooleanSettingView(this, ChanSettings.videoOpenExternal,
                     R.string.setting_video_open_external,
                     R.string.setting_video_open_external_description
             ));
