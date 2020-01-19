@@ -9,11 +9,21 @@ class SavedFilesBaseDirectory(
 ) : BaseDirectory() {
 
     override fun getDirFile(): File? {
-        return File(ChanSettings.saveLocation.fileApiBaseDir.get())
+        val path = ChanSettings.saveLocation.fileApiBaseDir.get()
+        if (path.isEmpty()) {
+            return null
+        }
+
+        return File(path)
     }
 
     override fun getDirUri(): Uri? {
-        return Uri.parse(ChanSettings.saveLocation.safBaseDir.get())
+        val path = ChanSettings.saveLocation.safBaseDir.get()
+        if (path.isEmpty()) {
+            return null
+        }
+
+        return Uri.parse(path)
     }
 
     override fun currentActiveBaseDirType(): ActiveBaseDirType {
