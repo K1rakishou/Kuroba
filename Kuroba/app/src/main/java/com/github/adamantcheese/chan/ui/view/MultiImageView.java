@@ -121,8 +121,12 @@ public class MultiImageView
     private CancelableDownload gifRequest;
     private CancelableDownload videoRequest;
     private SimpleExoPlayer exoPlayer;
+    private CancellableToast cancellableToast;
+
     private boolean backgroundToggle;
     private boolean imageAlreadySaved = false;
+    private boolean hasContent = false;
+    private boolean mediaSourceCancel = false;
 
     private static final float FLING_DIFF_Y_THRESHOLD = dp(60f);
     private static final float FLING_VELOCITY_Y_THRESHOLD = dp(200f);
@@ -186,33 +190,6 @@ public class MultiImageView
         if (context instanceof StartActivity) {
             ((StartActivity) context).getLifecycle().addObserver(this);
         }
-
-        exoDoubleTapDetector = new GestureDetector(context, new SimpleOnGestureListener() {
-            @Override
-            public boolean onDoubleTap(MotionEvent e) {
-                callback.onDoubleTap();
-                return true;
-            }
-        });
-
-        gifDoubleTapDetector = new GestureDetector(context, new SimpleOnGestureListener() {
-            @Override
-            public boolean onDoubleTap(MotionEvent e) {
-                GifDrawable drawable = (GifDrawable) findGifImageView().getDrawable();
-                if (drawable.isPlaying()) {
-                    drawable.pause();
-                } else {
-                    drawable.start();
-                }
-                return true;
-            }
-
-            @Override
-            public boolean onSingleTapConfirmed(MotionEvent e) {
-                callback.onTap();
-                return true;
-            }
-        });
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
