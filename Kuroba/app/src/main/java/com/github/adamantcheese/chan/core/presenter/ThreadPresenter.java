@@ -151,8 +151,7 @@ public class ThreadPresenter
             ThreadSaveManager threadSaveManager,
             FileManager fileManager,
             FileCacheV2 fileCacheV2,
-            CacheHandler cacheHandler
-            FileManager fileManager,
+            CacheHandler cacheHandler,
             MockReplyManager mockReplyManager
     ) {
         this.watchManager = watchManager;
