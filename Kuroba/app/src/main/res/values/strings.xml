@@ -798,4 +798,5 @@ Don't have a 4chan Pass?<br>
     <string name="report_activity_sending_report_message">Sending report…</string>
     <string name="report_activity_report_sent_message">Sent</string>
     <string name="report_activity_error_while_trying_to_send_report">Error while trying to send report: %1$s</string>
+    <string name="mock_reply">Mock reply</string>
 </resources>
