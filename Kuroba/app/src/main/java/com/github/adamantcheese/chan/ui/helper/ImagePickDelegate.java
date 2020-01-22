@@ -115,35 +115,35 @@ public class ImagePickDelegate
                     }
 
                     cancelableDownload = fileCacheV2.enqueueNormalDownloadFileRequest(clipboardURL.toString(), new FileCacheListener() {
-            @Override
-            public void onSuccess(RawFile file) {
-                BackgroundUtils.ensureMainThread();
+                        @Override
+                        public void onSuccess(RawFile file) {
+                            BackgroundUtils.ensureMainThread();
 
-                showToast(R.string.image_url_get_success);
-                Uri imageURL = Uri.parse(finalClipboardURL.toString());
-                callback.onFilePicked(imageURL.getLastPathSegment(), new File(file.getFullPath()));
-                reset();
-            }
+                            showToast(R.string.image_url_get_success);
+                            Uri imageURL = Uri.parse(finalClipboardURL.toString());
+                            callback.onFilePicked(imageURL.getLastPathSegment(), new File(file.getFullPath()));
+                            reset();
+                        }
 
-                                @Override
-                                public void onNotFound() {
-                                    onFail(new IOException("Not found"));
-                                }
+                        @Override
+                        public void onNotFound() {
+                            onFail(new IOException("Not found"));
+                        }
 
-                                @Override
-                                public void onFail(Exception exception) {
-                                    BackgroundUtils.ensureMainThread();
+                        @Override
+                        public void onFail(Exception exception) {
+                            BackgroundUtils.ensureMainThread();
 
-                                    String message = getString(
-                                            R.string.image_url_get_failed,
-                                            exception.getMessage()
-                                    );
+                            String message = getString(
+                                    R.string.image_url_get_failed,
+                                    exception.getMessage()
+                            );
 
-                                    showToast(message);
-                                    callback.onFilePickError(true);
-                                    reset();
-                                }
-                            });
+                            showToast(message);
+                            callback.onFilePickError(true);
+                            reset();
+                        }
+                    });
                 }
             } else {
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
