@@ -135,7 +135,6 @@ Re-enable this permission in the app settings if you permanently disabled it."</
     <string name="action_download_album">Download album</string>
     <string name="action_transparency_toggle">Toggle opacity</string>
     <string name="action_image_rotate">Rotate image</string>
-    <string name="action_reload_file">Force reload</string>
     <string name="action_search">Search</string>
     <string name="action_search_image">Image search</string>
     <string name="action_switch_catalog">Catalog mode</string>
@@ -773,7 +772,8 @@ Don't have a 4chan Pass?<br>
     <string name="js_captcha_cookies_editor_controller_title">JS Captcha cookies editor</string>
     <string name="settings_js_captcha_cookies_title">JS captcha cookies</string>
     <string name="settings_js_captcha_cookies_description">By selling your soul to the Google botnet you will be granted with easy captcha</string>
-    <string name="settings_concurrent_file_downloading_chunks_count_description">Split images/gifs/webms into chunks and download them concurrently (When it\'s possible. It doesn\'t work with 4chan servers, only when the file is cached by the cloudflare) to make the loading times shorter when viewing them in the gallery.\n\nHow many chunks a file will be split into:</string>
+    <string name="settings_concurrent_file_downloading_name">Concurrent chunked file downloading</string>
+    <string name="settings_concurrent_file_downloading_description">Split file downloads into chunks and download them concurrently, when possible; makes loading times shorter when viewing them in the gallery.\nHow many chunks a file will be split into:</string>
     <string name="image_saver_canceled_by_user_message">Canceled by user</string>
     <string name="image_saver_save_location_is_null_message">Save location is null!</string>
     <string name="image_saver_unknown_location_message">Unknown location</string>

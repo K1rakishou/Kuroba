@@ -37,7 +37,6 @@ import com.github.adamantcheese.chan.utils.BackgroundUtils;
 import com.github.adamantcheese.chan.utils.IOUtils;
 import com.github.adamantcheese.chan.utils.Logger;
 import com.github.k1rakishou.fsaf.FileManager;
-import com.github.k1rakishou.fsaf.file.AbstractFile;
 import com.github.k1rakishou.fsaf.file.RawFile;
 
 import java.io.File;
@@ -56,8 +55,8 @@ import okhttp3.HttpUrl;
 
 import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAppContext;
-import static com.github.adamantcheese.chan.utils.AndroidUtils.getAppContext;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getClipboardManager;
+import static com.github.adamantcheese.chan.utils.AndroidUtils.getString;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.showToast;
 import static com.github.adamantcheese.chan.utils.BackgroundUtils.runOnUiThread;
 
@@ -166,13 +165,10 @@ public class ImagePickDelegate {
 
                     cancelableDownload = fileCacheV2.enqueueNormalDownloadFileRequest(clipboardURL.toString(), new FileCacheListener() {
             @Override
-            public void onSuccess(AbstractFile file) {
+            public void onSuccess(RawFile file) {
                 BackgroundUtils.ensureMainThread();
 
-                if (!(file instanceof RawFile)) {
-                                        throw new RuntimeException(
-                                                "Only RawFiles are supported in ImagePickDelegate");
-                                    }showToast(R.string.image_url_get_success);
+                showToast(R.string.image_url_get_success);
                 Uri imageURL = Uri.parse(finalClipboardURL.toString());
                 callback.onFilePicked(imageURL.getLastPathSegment(), new File(file.getFullPath()));
                 reset();
@@ -187,7 +183,7 @@ public class ImagePickDelegate {
                                 public void onFail(Exception exception) {
                 BackgroundUtils.ensureMainThread();
 
-                String message = getAppContext().getString(
+                String message = getString(
                                             R.string.image_url_get_failed,
                                             exception.getMessage()
                                     );
