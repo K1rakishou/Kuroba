@@ -18,13 +18,10 @@ package com.github.adamantcheese.chan.ui.helper;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.provider.OpenableColumns;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
@@ -44,10 +41,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
@@ -60,7 +53,8 @@ import static com.github.adamantcheese.chan.utils.AndroidUtils.getString;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.showToast;
 import static com.github.adamantcheese.chan.utils.BackgroundUtils.runOnUiThread;
 
-public class ImagePickDelegate {
+public class ImagePickDelegate
+        implements Runnable {
     private static final String TAG = "ImagePickActivity";
 
     private static final int IMAGE_PICK_RESULT = 2;
@@ -75,11 +69,12 @@ public class ImagePickDelegate {
     FileCacheV2 fileCacheV2;
 
     private Activity activity;
+
     private ImagePickCallback callback;
     private Uri uri;
     private String fileName;
     private boolean success = false;
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private RawFile cacheFile;
 
     @Nullable
     private CancelableDownload cancelableDownload;
@@ -96,69 +91,25 @@ public class ImagePickDelegate {
             this.callback = callback;
 
             if (longPressed) {
-                pickRemoteFile(callback);
-            } else {
-                pickLocalFile(callback);
-            }
-        }
-    }
-
-    private void pickLocalFile(ImagePickCallback callback) {
-        PackageManager pm = getAppContext().getPackageManager();
-
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("*/*");
-
-        List<ResolveInfo> resolveInfos = pm.queryIntentActivities(intent, 0);
-        List<Intent> intents = new ArrayList<>(resolveInfos.size());
-
-        for (ResolveInfo info : resolveInfos) {
-            Intent newIntent = new Intent(Intent.ACTION_GET_CONTENT);
-            newIntent.addCategory(Intent.CATEGORY_OPENABLE);
-            newIntent.setPackage(info.activityInfo.packageName);
-            newIntent.setType("*/*");
-
-            intents.add(newIntent);
-        }
-
-        if (intents.size() == 1) {
-            activity.startActivityForResult(intents.get(0), IMAGE_PICK_RESULT);
-        } else if (intents.size() > 1) {
-            Intent chooser = Intent.createChooser(
-                    intents.remove(intents.size() - 1),
-                    activity.getString(R.string.image_pick_delegate_select_file_picker)
-            );
-
-            chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, intents.toArray(new Intent[0]));
-            activity.startActivityForResult(chooser, IMAGE_PICK_RESULT);
-        } else {
-            showToast(R.string.open_file_picker_failed, Toast.LENGTH_LONG);
-            callback.onFilePickError(false);
-            reset();
-        }
-    }
-
-    private void pickRemoteFile(ImagePickCallback callback) {
-        showToast(R.string.image_url_get_attempt);
-        HttpUrl clipboardURL = null;
-        try {
-            clipboardURL =
-                    HttpUrl.get(getClipboardManager().getPrimaryClip().getItemAt(0).getText().toString());
-        } catch (Exception exception) {
-            String message = getAppContext().getString(
+                showToast(R.string.image_url_get_attempt);
+                HttpUrl clipboardURL = null;
+                try {
+                    clipboardURL =
+                            HttpUrl.get(getClipboardManager().getPrimaryClip().getItemAt(0).getText().toString());
+                } catch (Exception exception) {
+                    String message = getAppContext().getString(
                             R.string.image_url_get_failed,
-            exception.getMessage()
+                            exception.getMessage()
                     );
 
-                    showToast(message);callback.onFilePickError(true);
-            reset();
+                    showToast(message);
+                    callback.onFilePickError(true);
+                    reset();
+                }
+                if (clipboardURL != null) {
+                    HttpUrl finalClipboardURL = clipboardURL;
 
-            return;
-        }
-
-        HttpUrl finalClipboardURL = clipboardURL;
-        if (cancelableDownload != null) {
+                    if (cancelableDownload != null) {
                         cancelableDownload.cancel();
                         cancelableDownload = null;
                     }
@@ -174,25 +125,40 @@ public class ImagePickDelegate {
                 reset();
             }
 
-            @Override
-            public void onNotFound() {
+                                @Override
+                                public void onNotFound() {
                                     onFail(new IOException("Not found"));
                                 }
 
                                 @Override
                                 public void onFail(Exception exception) {
-                BackgroundUtils.ensureMainThread();
+                                    BackgroundUtils.ensureMainThread();
 
-                String message = getString(
+                                    String message = getString(
                                             R.string.image_url_get_failed,
                                             exception.getMessage()
                                     );
 
                                     showToast(message);
-                callback.onFilePickError(true);
-                reset();
+                                    callback.onFilePickError(true);
+                                    reset();
+                                }
+                            });
+                }
+            } else {
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("*/*");
+
+                if (intent.resolveActivity(activity.getPackageManager()) != null) {
+                    activity.startActivityForResult(intent, IMAGE_PICK_RESULT);
+                } else {
+                    Logger.e(TAG, "No activity found to get file with");
+                    callback.onFilePickError(false);
+                    reset();
+                }
             }
-        });
+        }
     }
 
     public boolean onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -231,7 +197,7 @@ public class ImagePickDelegate {
                 fileName = DEFAULT_FILE_NAME;
             }
 
-            executor.execute(this::run);
+            new Thread(this).start();
             ok = true;
         } else if (resultCode == Activity.RESULT_CANCELED) {
             canceled = true;
@@ -245,8 +211,9 @@ public class ImagePickDelegate {
         return true;
     }
 
-    private void run() {
-        RawFile cacheFile = fileManager.fromRawFile(replyManager.getPickFile());
+    @Override
+    public void run() {
+        cacheFile = fileManager.fromRawFile(replyManager.getPickFile());
 
         InputStream is = null;
         OutputStream os = null;
@@ -292,6 +259,7 @@ public class ImagePickDelegate {
 
     private void reset() {
         callback = null;
+        cacheFile = null;
         success = false;
         fileName = null;
         uri = null;
