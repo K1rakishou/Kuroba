@@ -135,7 +135,6 @@ Re-enable this permission in the app settings if you permanently disabled it."</
     <string name="action_download_album">Download album</string>
     <string name="action_transparency_toggle">Toggle opacity</string>
     <string name="action_image_rotate">Rotate image</string>
-    <string name="action_reload_file">Force reload</string>
     <string name="action_search">Search</string>
     <string name="action_search_image">Image search</string>
     <string name="action_switch_catalog">Catalog mode</string>
@@ -166,8 +165,6 @@ Re-enable this permission in the app settings if you permanently disabled it."</
     <string name="open_link_confirmation">Open this link?</string>
     <string name="open_thread_confirmation">Open this thread?</string>
     <string name="open_link_failed">No applications were found to open this link</string>
-    <string name="open_file_picker_failed">No file picker applications were found</string>
-    <string name="image_pick_delegate_select_file_picker">Select a file picker to open a file</string>
     <string name="action_confirm_exit_title">Tap back again to exit</string>
 
     <string name="thumbnail_load_failed_network">Error</string>
@@ -195,7 +192,6 @@ Re-enable this permission in the app settings if you permanently disabled it."</
     <string name="thread_empty_select">Please select a thread</string>
     <string name="thread_up_down_hint">Scroll to top/bottom</string>
     <string name="thread_pin_hint">Bookmark this thread</string>
-    <string name="thread_save_hint">Save this thread as a local copy</string>
 
     <string name="thread_view_archive">Archive</string>
     <string name="thread_show_archives">Archives</string>
@@ -688,7 +684,7 @@ Don't have a 4chan Pass?<br>
     <string name="settings_experimental_settings_title">⚠ EXPERIMENTAL ⚠</string>
     <string name="settings_experimental_settings_description">These settings may be in an unstable state. They are for testing. They may break the app and you may have to reset the app data. Use them at your own risk if you are really interested in some feature. Backup everything beforehand.</string>
     <string name="incremental_thread_downloading_title">Incremental thread downloading</string>
-    <string name="incremental_thread_downloading_description">Allows you to download threads to view them after the original thread dies or when you have no internet connection. Basically, this thread will be stored locally along with all the files.</string>
+    <string name="incremental_thread_downloading_description">Allows you to download threads to view them after the original thread dies</string>
     <string name="cannot_open_in_browser_already_deleted">Can\'t open this thread in your browser, it\'s probably already been deleted</string>
     <string name="cannot_send_thread_via_nfc_already_deleted">Can\'t send thread via NFC, it\'s already been deleted</string>
     <string name="cannot_shared_thread_already_deleted">Can\'t share this thread, it\'s already been deleted</string>
@@ -762,41 +758,12 @@ Don't have a 4chan Pass?<br>
     <string name="image_saver_could_not_figure_out_save_location">Couldn\'t figure out save location</string>
     <string name="settings_captcha_setup">Captcha Settings</string>
     <string name="settings_captcha_setup_description">Captcha settings are per-site configurable. Tap for site setup.</string>
-    <string name="js_captcha_cookies_editor_hsid_cookie_text">HSID</string>
-    <string name="js_captcha_cookies_editor_ssid_cookie_text">SSID</string>
-    <string name="js_captcha_cookies_editor_sid_cookie_text">SID</string>
-    <string name="js_captcha_cookies_editor_nid_cookie_text">NID</string>
-    <string name="js_captcha_cookies_editor_reset">Reset</string>
-    <string name="js_captcha_cookies_editor_save_and_apply_text">Save and apply</string>
-    <string name="js_captcha_cookies_editor_make_sure_to_double_check_all_the_parameters_message">Make sure to double check all the parameters!</string>
-    <string name="js_captcha_cookies_editor_format_hint_message">Enter the values. No need to prepend them with \"HSID=…\", \"SSID=…\" etc</string>
-    <string name="js_captcha_cookies_editor_controller_title">JS Captcha cookies editor</string>
-    <string name="settings_js_captcha_cookies_title">JS captcha cookies</string>
-    <string name="settings_js_captcha_cookies_description">By selling your soul to the Google botnet you will be granted with easy captcha</string>
-    <string name="settings_concurrent_file_downloading_chunks_count_description">Split images/gifs/webms into chunks and download them concurrently (When it\'s possible. It doesn\'t work with 4chan servers, only when the file is cached by the cloudflare) to make the loading times shorter when viewing them in the gallery.\n\nHow many chunks a file will be split into:</string>
+    <string name="settings_concurrent_file_downloading_name">Concurrent chunked file downloading</string>
+    <string name="settings_concurrent_file_downloading_description">Split file downloads into chunks and download them concurrently, when possible; makes loading times shorter when viewing them in the gallery.\nHow many chunks a file will be split into:</string>
     <string name="image_saver_canceled_by_user_message">Canceled by user</string>
     <string name="image_saver_save_location_is_null_message">Save location is null!</string>
     <string name="image_saver_unknown_location_message">Unknown location</string>
     <string name="image_saver_failed_to_save_image">Failed to save the image. Reason</string>
     <string name="image_saver_no_write_permission_message">Cannot start saving images without WRITE permission</string>
     <string name="album_download_batch_image_processed_message">Downloaded %1$d out of %2$d (failed %3$d)</string>
-
-    <string name="lorem_ipsum">
-        The standard Lorem Ipsum passage, used since the 1500s
-"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-    </string>
-    <string name="report_activity_report_an_error_problem">Report an error/crash or other problem</string>
-    <string name="report_activity_i_have_a_problem_with">I have a problem with:</string>
-    <string name="report_activity_problem_description">Problem description:</string>
-    <string name="report_activity_attach_logs">Attach logs (You can remove some parts of them you don\'t want to send):</string>
-    <string name="report_activity_no_logs">No logs</string>
-    <string name="report_activity_cancel">Cancel</string>
-    <string name="report_activity_send_report">Send report</string>
-    <string name="report_activity_title_cannot_be_empty_error">Title cannot be empty!</string>
-    <string name="report_activity_description_cannot_be_empty_error">Description cannot be empty!</string>
-    <string name="report_activity_logs_are_empty_error">You checked \"Attach logs\" option, but the logs are empty!</string>
-    <string name="report_activity_sending_report_message">Sending report…</string>
-    <string name="report_activity_report_sent_message">Sent</string>
-    <string name="report_activity_error_while_trying_to_send_report">Error while trying to send report: %1$s</string>
-    <string name="mock_reply">Mock reply</string>
 </resources>
