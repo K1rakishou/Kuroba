@@ -165,6 +165,8 @@ Re-enable this permission in the app settings if you permanently disabled it."</
     <string name="open_link_confirmation">Open this link?</string>
     <string name="open_thread_confirmation">Open this thread?</string>
     <string name="open_link_failed">No applications were found to open this link</string>
+    <string name="open_file_picker_failed">No file picker applications were found</string>
+    <string name="image_pick_delegate_select_file_picker">Select a file picker to open a file</string>
     <string name="action_confirm_exit_title">Tap back again to exit</string>
 
     <string name="thumbnail_load_failed_network">Error</string>
@@ -765,4 +767,20 @@ Don't have a 4chan Pass?<br>
     <string name="album_download_batch_image_processed_message">Downloaded %1$d out of %2$d (%3$d failed)</string>
     <string name="media_settings_image_click_preload_strategy_name">Image preload strategy</string>
     <string name="media_settings_image_click_preload_strategy_description">When opening up an image pager, determines what image(s) should be preloaded next.</string>
+    <string name="mock_reply">Mock reply</string>
+    <string name="js_captcha_cookies_editor_hsid_cookie_text">HSID</string>
+    <string name="js_captcha_cookies_editor_ssid_cookie_text">SSID</string>
+    <string name="js_captcha_cookies_editor_sid_cookie_text">SID</string>
+    <string name="js_captcha_cookies_editor_nid_cookie_text">NID</string>
+    <string name="js_captcha_cookies_editor_reset">Reset</string>
+    <string name="js_captcha_cookies_editor_save_and_apply_text">Save and apply</string>
+    <string name="js_captcha_cookies_editor_make_sure_to_double_check_all_the_parameters_message">Make sure to double check all the parameters!</string>
+    <string name="js_captcha_cookies_editor_format_hint_message">Enter the values. No need to prepend them with \"HSID=…\", \"SSID=…\" etc</string>
+    <string name="js_captcha_cookies_editor_controller_title">JS Captcha cookies editor</string>
+    <string name="settings_js_captcha_cookies_title">JS captcha cookies</string>
+    <string name="settings_js_captcha_cookies_description">By selling your soul to the Google botnet you will be granted with easy captcha</string>
+    <string name="js_captcha_cookies_editor_bad_hsid">HSID cookie is not set!</string>
+    <string name="js_captcha_cookies_editor_bad_ssid">SSID cookie is not set!</string>
+    <string name="js_captcha_cookies_editor_bad_sid">SID cookie is not set!</string>
+    <string name="js_captcha_cookies_editor_bad_nid">NID cookie is not set!</string>
 </resources>
