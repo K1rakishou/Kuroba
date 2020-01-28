@@ -5,8 +5,7 @@ import com.github.adamantcheese.chan.core.settings.ChanSettings
 import com.github.k1rakishou.fsaf.manager.base_directory.BaseDirectory
 import java.io.File
 
-class SavedFilesBaseDirectory(
-) : BaseDirectory() {
+class SavedFilesBaseDirectory : BaseDirectory() {
 
     override fun getDirFile(): File? {
         val path = ChanSettings.saveLocation.fileApiBaseDir.get()

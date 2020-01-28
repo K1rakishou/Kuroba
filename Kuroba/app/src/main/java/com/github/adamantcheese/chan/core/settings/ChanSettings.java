@@ -25,9 +25,7 @@ import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.core.settings.base_dir.LocalThreadsBaseDirSetting;
 import com.github.adamantcheese.chan.core.settings.base_dir.SavedFilesBaseDirSetting;
 import com.github.adamantcheese.chan.ui.adapter.PostsFilter;
-import com.github.adamantcheese.chan.ui.controller.settings.captcha.JsCaptchaCookiesJar;
 import com.github.adamantcheese.chan.utils.Logger;
-import com.google.gson.Gson;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -44,11 +42,6 @@ import static com.github.adamantcheese.chan.utils.AndroidUtils.postToEventBus;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class ChanSettings {
-    private static final String TAG = "ChanSettings";
-
-    public static final String NOTIFY_ALL_POSTS = "all";
-    public static final String NOTIFY_ONLY_QUOTES = "quotes";
-
     public enum MediaAutoLoadMode
             implements OptionSettingItem {
         // ALways auto load, either wifi or mobile
@@ -116,7 +109,8 @@ public class ChanSettings {
         }
     }
 
-    public enum ConcurrentFileDownloadingChunks implements OptionSettingItem {
+    public enum ConcurrentFileDownloadingChunks
+            implements OptionSettingItem {
         One("One chunk"),
         Two("Two chunks"),
         Four("Four chunks");
@@ -132,17 +126,27 @@ public class ChanSettings {
             return name;
         }
 
-        public static int toChunkCount(ConcurrentFileDownloadingChunks item) {
-            switch (item) {
-                case One:
-                    return 1;
-                case Two:
-                    return 2;
-                case Four:
-                    return 4;
-                default:
-                    throw new RuntimeException("Not implemented for " + item.getClass().getName());
-            }
+        public int toInt() {
+            return (int) Math.pow(2, ordinal());
+        }
+    }
+
+    public enum ImageClickPreloadStrategy
+            implements OptionSettingItem {
+        PreloadNext("Preload next image"),
+        PreloadPrevious("Preload previous image"),
+        PreloadBoth("Preload next and previous images"),
+        PreloadNeither("Do not preload any images");
+
+        String name;
+
+        ImageClickPreloadStrategy(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getKey() {
+            return name;
         }
     }
 
@@ -249,9 +253,9 @@ public class ChanSettings {
     public static final BooleanSetting transparencyOn;
     public static final StringSetting youtubeTitleCache;
     public static final StringSetting youtubeDurationCache;
-    public static final OptionsSetting<ConcurrentFileDownloadingChunks> concurrentFileDownloadingChunksCount;
+    public static final OptionsSetting<ConcurrentFileDownloadingChunks> concurrentDownloadChunkCount;
     public static final BooleanSetting verboseLogs;
-    public static final StringSetting jsCaptchaCookies;
+    public static final OptionsSetting<ImageClickPreloadStrategy> imageClickPreloadStrategy;
 
     static {
         try {
@@ -327,7 +331,7 @@ public class ChanSettings {
                     new IntegerSetting(p, "preference_watch_background_interval", (int) MINUTES.toMillis(15));
             watchBackgroundInterval.addCallback((setting, value) -> postToEventBus(new SettingChanged<>(
                     watchBackgroundInterval)));
-            watchNotifyMode = new StringSetting(p, "preference_watch_notify_mode", NOTIFY_ALL_POSTS);
+            watchNotifyMode = new StringSetting(p, "preference_watch_notify_mode", "all");
             watchSound = new StringSetting(p, "preference_watch_sound", "quotes");
             watchPeek = new BooleanSetting(p, "preference_watch_peek", true);
             watchLastCount = new IntegerSetting(p, "preference_watch_last_count", 0);
@@ -381,32 +385,22 @@ public class ChanSettings {
             transparencyOn = new BooleanSetting(p, "image_transparency_on", false);
             youtubeTitleCache = new StringSetting(p, "yt_title_cache", "{}");
             youtubeDurationCache = new StringSetting(p, "yt_dur_cache", "{}");
-            jsCaptchaCookies = new StringSetting(p, "js_captcha_cookies", "{}");
-            concurrentFileDownloadingChunksCount = new OptionsSetting<>(
-                    p,
+            concurrentDownloadChunkCount = new OptionsSetting<>(p,
                     "concurrent_file_downloading_chunks_count",
                     ConcurrentFileDownloadingChunks.class,
                     ConcurrentFileDownloadingChunks.Two
             );
-            verboseLogs = new BooleanSetting(
-                    p,
-                    "verbose_logs",
-                    false
+            verboseLogs = new BooleanSetting(p, "verbose_logs", false);
+            imageClickPreloadStrategy = new OptionsSetting<>(p,
+                    "image_click_preload_strategy",
+                    ImageClickPreloadStrategy.class,
+                    ImageClickPreloadStrategy.PreloadNext
             );
         } catch (Throwable error) {
             // If something crashes while the settings are initializing we at least will have the
             // stacktrace. Otherwise we won't because of the Feather.
             Logger.e("ChanSettings", "Error while initializing the settings", error);
             throw error;
-        }
-    }
-
-    public static JsCaptchaCookiesJar getJsCaptchaCookieJar(Gson gson) {
-        try {
-            return gson.fromJson(ChanSettings.jsCaptchaCookies.get(), JsCaptchaCookiesJar.class);
-        } catch (Throwable error) {
-            Logger.e(TAG, "Error while trying to deserialize JsCaptchaCookiesJar", error);
-            return JsCaptchaCookiesJar.empty();
         }
     }
 

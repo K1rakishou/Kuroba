@@ -41,7 +41,6 @@ import com.github.adamantcheese.chan.ui.theme.ThemeHelper;
 import com.github.adamantcheese.chan.ui.toolbar.ToolbarMenuItem;
 import com.github.adamantcheese.chan.ui.view.GridRecyclerView;
 import com.github.adamantcheese.chan.ui.view.PostImageThumbnailView;
-import com.github.adamantcheese.chan.utils.BackgroundUtils;
 import com.github.adamantcheese.chan.utils.RecyclerUtils;
 import com.github.adamantcheese.chan.utils.StringUtils;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -54,7 +53,6 @@ import javax.inject.Inject;
 
 import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.dp;
-import static com.github.adamantcheese.chan.utils.AndroidUtils.getAppContext;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getQuantityString;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getString;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.inflate;
@@ -110,8 +108,17 @@ public class AlbumDownloadController
     @Override
     public void onDestroy() {
         super.onDestroy();
-
         imageSaver.removeBundleTaskCallback();
+    }
+
+    @Override
+    public boolean onBack() {
+        if (loadingViewController != null) {
+            loadingViewController.stopPresenting();
+            loadingViewController = null;
+            return true;
+        }
+        return super.onBack();
     }
 
     @Override
@@ -156,10 +163,11 @@ public class AlbumDownloadController
         switch (result) {
             case Ok:
                 if (loadingViewController != null) {
-                    throw new IllegalStateException("LoadingViewController is already set!");
+                    loadingViewController.stopPresenting();
                 }
 
                 loadingViewController = new LoadingViewController(context, false);
+                loadingViewController.enableBack();
                 navigationController.presentController(loadingViewController);
                 break;
             case BaseDirectoryDoesNotExist:
@@ -173,15 +181,9 @@ public class AlbumDownloadController
 
     @Override
     public void onImageProcessed(int downloaded, int failed, int total) {
-        BackgroundUtils.ensureMainThread();
-
         if (loadingViewController != null) {
-            String message = getAppContext().getString(
-                    R.string.album_download_batch_image_processed_message,
-                    downloaded,
-                    total,
-                    failed
-            );
+            String message =
+                    getString(R.string.album_download_batch_image_processed_message, downloaded, total, failed);
 
             loadingViewController.updateWithText(message);
         }
@@ -189,23 +191,13 @@ public class AlbumDownloadController
 
     @Override
     public void onBundleDownloadCompleted() {
-        BackgroundUtils.ensureMainThread();
-
-        if (loadingViewController == null) {
-            throw new IllegalStateException("LoadingViewController is not set!");
+        if (loadingViewController != null) {
+            loadingViewController.stopPresenting();
+            loadingViewController = null;
         }
 
-        if (!loadingViewController.shown) {
-            throw new IllegalStateException("LoadingViewController is not shown!");
-        }
-
-        loadingViewController.stopPresenting();
-        loadingViewController = null;
-
-        if (navigationController.shown) {
-            // Pop this controller
-            navigationController.popController();
-        }
+        //extra pop to get out of this controller
+        navigationController.popController();
     }
 
     private void onCheckAllClicked(ToolbarMenuItem menuItem) {

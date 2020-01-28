@@ -156,7 +156,7 @@ public abstract class ThreadController
         NdefMessage message = null;
 
         if (loadable != null) {
-            url = loadable.site.resolvable().desktopUrlForThread(loadable);
+            url = loadable.desktopUrl();
         }
 
         if (url != null) {

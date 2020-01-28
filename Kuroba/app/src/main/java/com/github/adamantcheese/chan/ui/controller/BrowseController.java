@@ -56,6 +56,7 @@ import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getString;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.openLinkInBrowser;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.shareLink;
+import static com.github.adamantcheese.chan.utils.AndroidUtils.showToast;
 
 public class BrowseController
         extends ThreadController
@@ -286,8 +287,12 @@ public class BrowseController
 
     private void handleShareAndOpenInBrowser(ThreadPresenter presenter, boolean share) {
         if (presenter.isBound()) {
-            Loadable loadable = presenter.getLoadable();
-            String link = loadable.site.resolvable().desktopUrlForThread(loadable);
+            if (presenter.getChanThread() == null) {
+                showToast(R.string.cannot_open_in_browser_already_deleted);
+                return;
+            }
+
+            String link = presenter.getLoadable().desktopUrl();
 
             if (share) {
                 shareLink(link);

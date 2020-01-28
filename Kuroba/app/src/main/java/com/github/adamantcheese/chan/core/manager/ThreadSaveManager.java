@@ -65,7 +65,6 @@ public class ThreadSaveManager {
     private static final String TAG = "ThreadSaveManager";
     private static final int REQUEST_BUFFERING_TIME_SECONDS = 30;
     private static final int MAX_RETRY_ATTEMPTS = 3;
-    private static final boolean VERBOSE_LOG = false;
 
     public static final String SAVED_THREADS_DIR_NAME = "saved_threads";
     public static final String IMAGES_DIR_NAME = "images";
@@ -78,6 +77,7 @@ public class ThreadSaveManager {
     private final DatabaseSavedThreadManager databaseSavedThreadManager;
     private final SavedThreadLoaderRepository savedThreadLoaderRepository;
     private final FileManager fileManager;
+    private final boolean verboseLogsEnabled;
 
     @GuardedBy("itself")
     private final Map<Loadable, SaveThreadParameters> activeDownloads = new HashMap<>();
@@ -113,6 +113,7 @@ public class ThreadSaveManager {
         this.savedThreadLoaderRepository = savedThreadLoaderRepository;
         this.databaseSavedThreadManager = databaseManager.getDatabaseSavedThreadManager();
         this.fileManager = fileManager;
+        this.verboseLogsEnabled = ChanSettings.verboseLogs.get();
 
         initRxWorkerQueue();
     }
@@ -136,15 +137,14 @@ public class ThreadSaveManager {
                 .subscribe(res -> {},
                         // OK
                         error -> {
-                                throw new RuntimeException(TAG + " Uncaught exception!!! " +
-                                          "workerQueue is in error state now!!! " +
-                                          "This should not happen!!!, original error = " + error.getMessage());
-                              }, () -> {
-                                throw new RuntimeException(
-                                        TAG + " workerQueue stream has completed!!! This should not happen!!!"
-                                );
-                           }
-                   );
+                            throw new RuntimeException(
+                                    TAG + " Uncaught exception!!! " + "workerQueue is in error state now!!! "
+                                            + "This should not happen!!!, original error = " + error.getMessage());
+                        }, () -> {
+                            throw new RuntimeException(
+                                    TAG + " workerQueue stream has completed!!! This should not happen!!!");
+                        }
+                );
     }
 
     private Flowable<Boolean> processCollectedRequests(List<Loadable> loadableList) {
@@ -238,7 +238,7 @@ public class ThreadSaveManager {
         synchronized (activeDownloads) {
             // Check if a thread is already being downloaded
             if (activeDownloads.containsKey(loadable)) {
-                if (VERBOSE_LOG) {
+                if (verboseLogsEnabled) {
                     Logger.d(TAG, "Downloader is already running for " + loadable.toShortString());
                 }
 
@@ -354,8 +354,7 @@ public class ThreadSaveManager {
             SaveThreadParameters parameters = activeDownloads.get(loadable);
             if (parameters == null) {
                 Logger.w(TAG,
-                        "cancelDownloading Could not find SaveThreadParameters for loadable "
-                                + loadable.toShortString()
+                        "cancelDownloading Could not find SaveThreadParameters for loadable " + loadable.toShortString()
                 );
                 return;
             }
@@ -377,8 +376,7 @@ public class ThreadSaveManager {
             SaveThreadParameters parameters = activeDownloads.get(loadable);
             if (parameters == null) {
                 Logger.w(TAG,
-                        "stopDownloading Could not find SaveThreadParameters for loadable "
-                                + loadable.toShortString()
+                        "stopDownloading Could not find SaveThreadParameters for loadable " + loadable.toShortString()
                 );
                 return;
             }
@@ -393,14 +391,12 @@ public class ThreadSaveManager {
             SaveThreadParameters saveThreadParameters = activeDownloads.get(loadable);
             if (saveThreadParameters == null) {
                 Logger.w(TAG,
-                        "Attempt to remove non existing active download with loadable "
-                                + loadable.toShortString()
+                        "Attempt to remove non existing active download with loadable " + loadable.toShortString()
                 );
                 return;
             }
 
-            Logger.d(TAG, "Download for loadable " + loadable.toShortString()
-                    + " ended up with result " + result);
+            Logger.d(TAG, "Download for loadable " + loadable.toShortString() + " ended up with result " + result);
 
             // Remove the download
             activeDownloads.remove(loadable);
@@ -693,7 +689,7 @@ public class ThreadSaveManager {
                     if (!checkWhetherAllPostImagesAreAlreadySaved(threadSaveDirImages, post)) {
                         // Some of the post's images could not be downloaded during the previous download
                         // so we need to download them now
-                        if (VERBOSE_LOG) {
+                        if (verboseLogsEnabled) {
                             Logger.d(TAG,
                                     "Found not downloaded yet images for a post " + post.no + ", for loadable "
                                             + loadable.toShortString()
@@ -835,8 +831,7 @@ public class ThreadSaveManager {
                 downloadImage(loadable, threadSaveDirImages, spoilerImageName, spoilerImageUrl);
             } catch (ImageWasAlreadyDeletedException e) {
                 // If this ever happens that means that something has changed on the server
-                Logger.e(TAG, "Could not download spoiler image, got 404 for loadable "
-                        + loadable.toShortString());
+                Logger.e(TAG, "Could not download spoiler image, got 404 for loadable " + loadable.toShortString());
                 return false;
             }
         }
@@ -865,7 +860,7 @@ public class ThreadSaveManager {
             int maxImageIoErrors
     ) {
         if (post.images.isEmpty()) {
-            if (VERBOSE_LOG) {
+            if (verboseLogsEnabled) {
                 Logger.d(TAG, "Post " + post.no + " contains no images");
             }
             // No images, so return true
@@ -873,7 +868,7 @@ public class ThreadSaveManager {
         }
 
         if (!shouldDownloadImages()) {
-            if (VERBOSE_LOG) {
+            if (verboseLogsEnabled) {
                 Logger.d(TAG, "Cannot load images or videos with the current network");
             }
             return Flowable.just(false);
@@ -961,8 +956,7 @@ public class ThreadSaveManager {
             AdditionalThreadParameters parameters = additionalThreadParameter.get(loadable);
             if (parameters == null) {
                 Logger.e(TAG,
-                        "isImageAlreadyDeletedFromServer parameters == null for loadable "
-                                + loadable.toShortString()
+                        "isImageAlreadyDeletedFromServer parameters == null for loadable " + loadable.toShortString()
                 );
                 return true;
             }
@@ -994,8 +988,8 @@ public class ThreadSaveManager {
         int percent = (int) (((float) index / (float) count) * 100f);
 
         Logger.d(TAG,
-                "Downloading is in progress for an image with loadable " + loadable.toShortString() + ", " + index
-                        + "/" + count + " (" + percent + "%)"
+                "Downloading is in progress for an image with loadable " + loadable.toShortString() + ", " + index + "/"
+                        + count + " (" + percent + "%)"
         );
     }
 
@@ -1049,7 +1043,7 @@ public class ThreadSaveManager {
             return;
         }
 
-        if (VERBOSE_LOG) {
+        if (verboseLogsEnabled) {
             Logger.d(TAG,
                     "Downloading a file with name " + filename + " on a thread " + currentThread().getName()
                             + " for loadable " + loadable.toShortString()
@@ -1082,7 +1076,7 @@ public class ThreadSaveManager {
     private void downloadImage(Loadable loadable, AbstractFile threadSaveDirImages, String filename, HttpUrl imageUrl)
             throws IOException, ImageWasAlreadyDeletedException {
         if (!shouldDownloadImages()) {
-            if (VERBOSE_LOG) {
+            if (verboseLogsEnabled) {
                 Logger.d(TAG, "Cannot load images or videos with the current network");
             }
             return;
@@ -1104,7 +1098,7 @@ public class ThreadSaveManager {
 
                 storeImageToFile(imageFile, response);
 
-                if (VERBOSE_LOG) {
+                if (verboseLogsEnabled) {
                     Logger.d(TAG, "Downloaded a file with name " + filename);
                 }
             }

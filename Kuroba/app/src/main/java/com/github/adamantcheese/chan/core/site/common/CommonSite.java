@@ -21,6 +21,7 @@ import android.os.Looper;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.github.adamantcheese.chan.core.model.Post;
 import com.github.adamantcheese.chan.core.model.json.site.SiteConfig;
@@ -234,8 +235,10 @@ public abstract class CommonSite
     }
 
     public static abstract class CommonSiteUrlHandler
-            extends SiteUrlHandler {
+            implements SiteUrlHandler {
         public abstract HttpUrl getUrl();
+
+        public abstract String[] getMediaHosts();
 
         public abstract String[] getNames();
 
@@ -251,12 +254,17 @@ public abstract class CommonSite
         }
 
         @Override
+        public boolean matchesMediaHost(@NonNull HttpUrl url) {
+            return SiteBase.containsMediaHostUrl(url, getMediaHosts());
+        }
+
+        @Override
         public boolean respondsTo(HttpUrl url) {
             return getUrl().host().equals(url.host());
         }
 
         @Override
-        public String desktopUrlForPost(Loadable loadable, final int postNo) {
+        public String desktopUrl(Loadable loadable, int postNo) {
             if (loadable.isCatalogMode()) {
                 return getUrl().newBuilder().addPathSegment(loadable.boardCode).toString();
             } else if (loadable.isThreadMode()) {

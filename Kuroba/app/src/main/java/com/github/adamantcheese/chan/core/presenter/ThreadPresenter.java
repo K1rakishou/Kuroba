@@ -26,7 +26,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.util.Pair;
 
-import com.github.adamantcheese.chan.BuildConfig;
 import com.github.adamantcheese.chan.R;
 import com.github.adamantcheese.chan.core.cache.CacheHandler;
 import com.github.adamantcheese.chan.core.cache.FileCacheV2;
@@ -57,7 +56,6 @@ import com.github.adamantcheese.chan.core.site.http.DeleteResponse;
 import com.github.adamantcheese.chan.core.site.http.HttpCall;
 import com.github.adamantcheese.chan.core.site.loader.ChanThreadLoader;
 import com.github.adamantcheese.chan.core.site.parser.CommentParser;
-import com.github.adamantcheese.chan.core.site.parser.MockReplyManager;
 import com.github.adamantcheese.chan.core.site.sites.chan4.Chan4PagesRequest;
 import com.github.adamantcheese.chan.ui.adapter.PostAdapter;
 import com.github.adamantcheese.chan.ui.adapter.PostsFilter;
@@ -116,7 +114,6 @@ public class ThreadPresenter
     private static final int POST_OPTION_FILTER_TRIPCODE = 14;
     private static final int POST_OPTION_EXTRA = 15;
     private static final int POST_OPTION_REMOVE = 16;
-    private static final int POST_OPTION_MOCK_REPLY = 17;
 
     private final WatchManager watchManager;
     private final DatabaseManager databaseManager;
@@ -126,7 +123,6 @@ public class ThreadPresenter
     private final FileManager fileManager;
     private final FileCacheV2 fileCacheV2;
     private final CacheHandler cacheHandler;
-    private final MockReplyManager mockReplyManager;
 
     private ThreadPresenterCallback threadPresenterCallback;
     private Loadable loadable;
@@ -151,8 +147,7 @@ public class ThreadPresenter
             ThreadSaveManager threadSaveManager,
             FileManager fileManager,
             FileCacheV2 fileCacheV2,
-            CacheHandler cacheHandler,
-            MockReplyManager mockReplyManager
+            CacheHandler cacheHandler
     ) {
         this.watchManager = watchManager;
         this.databaseManager = databaseManager;
@@ -162,7 +157,6 @@ public class ThreadPresenter
         this.fileManager = fileManager;
         this.fileCacheV2 = fileCacheV2;
         this.cacheHandler = cacheHandler;
-        this.mockReplyManager = mockReplyManager;
     }
 
     public void create(ThreadPresenterCallback threadPresenterCallback) {
@@ -575,12 +569,10 @@ public class ThreadPresenter
                             }
 
                             if ((postImage.type == PostImage.Type.STATIC || postImage.type == PostImage.Type.GIF)
-                                    && shouldLoadForNetworkType(ChanSettings.imageAutoLoadNetwork.get()))
-                            {
+                                    && shouldLoadForNetworkType(ChanSettings.imageAutoLoadNetwork.get())) {
                                 postImageList.add(postImage);
                             } else if (postImage.type == PostImage.Type.MOVIE
-                                    && shouldLoadForNetworkType(ChanSettings.videoAutoLoadNetwork.get()))
-                            {
+                                    && shouldLoadForNetworkType(ChanSettings.videoAutoLoadNetwork.get())) {
                                 postImageList.add(postImage);
                             }
                         }
@@ -588,10 +580,7 @@ public class ThreadPresenter
                 }
 
                 if (postImageList.size() > 0) {
-                    activePrefetches = fileCacheV2.enqueueMediaPrefetchRequestBatch(
-                            loadable,
-                            postImageList
-                    );
+                    activePrefetches = fileCacheV2.enqueueMediaPrefetchRequestBatch(loadable, postImageList);
                 }
             }
         }
@@ -827,7 +816,7 @@ public class ThreadPresenter
     }
 
     @Override
-    public void onPostDoubleClicked(Post post) {
+    public void onPopupPostDoubleClicked(Post post) {
         if (!loadable.isCatalogMode()) {
             if (searchOpen) {
                 searchQuery = null;
@@ -918,10 +907,6 @@ public class ThreadPresenter
         if (!loadable.isLocal()) {
             boolean isSaved = databaseManager.getDatabaseSavedReplyManager().isSaved(post.board, post.no);
             extraMenu.add(new FloatingMenuItem(POST_OPTION_SAVE, isSaved ? R.string.unsave : R.string.save));
-
-            if (BuildConfig.DEV_BUILD) {
-                extraMenu.add(new FloatingMenuItem(POST_OPTION_MOCK_REPLY, R.string.mock_reply));
-            }
         }
 
         return POST_OPTION_EXTRA;
@@ -992,10 +977,10 @@ public class ThreadPresenter
                 watchManager.createPin(pinLoadable, post, PinType.WATCH_NEW_POSTS);
                 break;
             case POST_OPTION_OPEN_BROWSER:
-                openLink(loadable.site.resolvable().desktopUrlForPost(loadable, post.no));
+                openLink(loadable.site.resolvable().desktopUrl(loadable, post.no));
                 break;
             case POST_OPTION_SHARE:
-                shareLink(loadable.site.resolvable().desktopUrlForPost(loadable, post.no));
+                shareLink(loadable.site.resolvable().desktopUrl(loadable, post.no));
                 break;
             case POST_OPTION_REMOVE:
             case POST_OPTION_HIDE:
@@ -1025,14 +1010,6 @@ public class ThreadPresenter
                         );
                     }
                 }
-                break;
-            case POST_OPTION_MOCK_REPLY:
-                if (chanLoader == null || chanLoader.getThread() == null) {
-                    break;
-                }
-
-                int opNo = chanLoader.getThread().getOp().no;
-                mockReplyManager.addMockReply(post.board.siteId, post.board.code, opNo, post.no);
                 break;
         }
     }
@@ -1276,8 +1253,7 @@ public class ThreadPresenter
 
     private void showPosts(boolean refreshAfterHideOrRemovePosts) {
         if (chanLoader != null && chanLoader.getThread() != null) {
-            threadPresenterCallback.showPosts(
-                    chanLoader.getThread(),
+            threadPresenterCallback.showPosts(chanLoader.getThread(),
                     new PostsFilter(order, searchQuery),
                     refreshAfterHideOrRemovePosts
             );
@@ -1347,7 +1323,7 @@ public class ThreadPresenter
 
     @Override
     public void openArchive(Pair<String, String> domainNamePair) {
-        String link = loadable.site.resolvable().desktopUrlForThread(loadable);
+        String link = loadable.desktopUrl();
         link = link.replace("https://boards.4chan.org/", "https://" + domainNamePair.second + "/");
         openLinkInBrowser((Activity) context, link);
     }

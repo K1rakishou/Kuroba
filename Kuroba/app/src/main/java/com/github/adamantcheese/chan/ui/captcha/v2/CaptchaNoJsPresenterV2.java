@@ -78,12 +78,12 @@ public class CaptchaNoJsPresenterV2 {
     public CaptchaNoJsPresenterV2(@Nullable AuthenticationCallbacks callbacks, Context context) {
         this.callbacks = callbacks;
         this.parser = new CaptchaNoJsHtmlParser(context);
-        this.okHttpClient =  Chan.instance(NetModule.ProxiedOkHttpClient.class);
+        this.okHttpClient = Chan.instance(NetModule.ProxiedOkHttpClient.class);
     }
 
     public void init(String siteKey, String baseUrl) {
         this.siteKey = siteKey;
-        this.baseUrl = baseUrl; 
+        this.baseUrl = baseUrl;
     }
 
     /**
@@ -133,7 +133,7 @@ public class CaptchaNoJsPresenterV2 {
                             .header("Cookie", defaultGoogleCookies)
                             .build();
 
-                    try (Response response = okHttpClient.newCall(request).execute()) {
+                    try (Response response = okHttpClient.getProxiedClient().newCall(request).execute()) {
                         prevCaptchaInfo = handleGetRecaptchaResponse(response);
                     } finally {
                         verificationInProgress.set(false);
@@ -231,7 +231,7 @@ public class CaptchaNoJsPresenterV2 {
                 .header("Cookie", defaultGoogleCookies)
                 .build();
 
-        try (Response response = okHttpClient.newCall(request).execute()) {
+        try (Response response = okHttpClient.getProxiedClient().newCall(request).execute()) {
             return handleGetRecaptchaResponse(response);
         }
     }

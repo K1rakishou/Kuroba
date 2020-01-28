@@ -78,10 +78,7 @@ public class VichanActions
 
     @Override
     public void prepare(MultipartHttpCall call, Reply reply, ReplyResponse replyResponse) {
-        VichanAntispam antispam = new VichanAntispam(
-                HttpUrl.parse(site.resolvable().desktopUrlForThread(reply.loadable))
-        );
-
+        VichanAntispam antispam = new VichanAntispam(HttpUrl.parse(reply.loadable.desktopUrl()));
         antispam.addDefaultIgnoreFields();
         for (Map.Entry<String, String> e : antispam.get().entrySet()) {
             call.parameter(e.getKey(), e.getValue());

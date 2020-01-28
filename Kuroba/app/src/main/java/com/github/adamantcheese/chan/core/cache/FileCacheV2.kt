@@ -8,6 +8,7 @@ import com.github.adamantcheese.chan.core.manager.ThreadSaveManager
 import com.github.adamantcheese.chan.core.model.PostImage
 import com.github.adamantcheese.chan.core.model.orm.Loadable
 import com.github.adamantcheese.chan.core.settings.ChanSettings
+import com.github.adamantcheese.chan.core.site.SiteResolver
 import com.github.adamantcheese.chan.ui.settings.base_directory.LocalThreadsBaseDirectory
 import com.github.adamantcheese.chan.utils.BackgroundUtils
 import com.github.adamantcheese.chan.utils.Logger
@@ -42,6 +43,7 @@ import kotlin.collections.ArrayList
 class FileCacheV2(
         private val fileManager: FileManager,
         private val cacheHandler: CacheHandler,
+        private val siteResolver: SiteResolver,
         private val okHttpClient: OkHttpClient
 ) {
     private val activeDownloads = ActiveDownloads()
@@ -54,9 +56,7 @@ class FileCacheV2(
     private val normalRequestQueue = PublishProcessor.create<String>()
     private val batchRequestQueue = PublishProcessor.create<List<String>>()
 
-    private val chunksCount = ChanSettings.ConcurrentFileDownloadingChunks.toChunkCount(
-            ChanSettings.concurrentFileDownloadingChunksCount.get()
-    )
+    private val chunksCount = ChanSettings.concurrentDownloadChunkCount.get().toInt()
     private val threadsCount = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(4)
     private val requestCancellationThread = Executors.newSingleThreadExecutor()
     private val verboseLogs = ChanSettings.verboseLogs.get()
@@ -92,6 +92,7 @@ class FileCacheV2(
     private val partialContentSupportChecker = PartialContentSupportChecker(
             okHttpClient,
             activeDownloads,
+            siteResolver,
             MAX_TIMEOUT_MS
     )
 
@@ -111,6 +112,7 @@ class FileCacheV2(
     private val chunkPersister = ChunkMerger(
             fileManager,
             cacheHandler,
+            siteResolver,
             activeDownloads,
             verboseLogs
     )
@@ -145,10 +147,10 @@ class FileCacheV2(
                 .onBackpressureBuffer()
                 .flatMap { url ->
                     return@flatMap Flowable.defer { handleFileDownload(url) }
-                        .subscribeOn(workerScheduler)
-                        .onErrorReturn { throwable -> processErrors(url, throwable) }
-                        .map { result -> Pair(url, result) }
-                        .doOnNext { (url, result) -> handleResults(url, result) }
+                            .subscribeOn(workerScheduler)
+                            .onErrorReturn { throwable -> processErrors(url, throwable) }
+                            .map { result -> Pair(url, result) }
+                            .doOnNext { (url, result) -> handleResults(url, result) }
                 }
                 .subscribe({
                     // Do nothing
@@ -174,15 +176,15 @@ class FileCacheV2(
                 .onBackpressureBuffer()
                 .concatMap { urlList ->
                     return@concatMap Flowable.fromIterable(urlList)
-                        .subscribeOn(batchScheduler)
-                        .concatMap { url ->
-                            return@concatMap handleFileDownload(url)
-                                .onErrorReturn { throwable -> processErrors(url, throwable) }
-                                .map { result -> Pair(url, result) }
-                                .doOnNext { (url, result) ->
-                                    handleResults(url, result)
-                                }
-                        }
+                            .subscribeOn(batchScheduler)
+                            .concatMap { url ->
+                                return@concatMap handleFileDownload(url)
+                                        .onErrorReturn { throwable -> processErrors(url, throwable) }
+                                        .map { result -> Pair(url, result) }
+                                        .doOnNext { (url, result) ->
+                                            handleResults(url, result)
+                                        }
+                            }
                 }
                 .subscribe({
                     // Do nothing
@@ -670,9 +672,9 @@ class FileCacheV2(
 
                         log(TAG,
                                 "Progress " +
-                                "chunkIndex = ${result.chunkIndex}, downloaded: (${downloadedString}) " +
-                                "(${result.downloaded} B) / ${totalString} (${chunkSize} B), " +
-                                "${percents}%) for request ${request}"
+                                        "chunkIndex = ${result.chunkIndex}, downloaded: (${downloadedString}) " +
+                                        "(${result.downloaded} B) / ${totalString} (${chunkSize} B), " +
+                                        "${percents}%) for request ${request}"
                         )
                     }
 
@@ -685,11 +687,11 @@ class FileCacheV2(
 
                 // Cancel
                 is FileDownloadResult.Canceled,
-                // Stop (called by WebmStreamingSource to stop downloading a file via FileCache and
-                // continue downloading it via WebmStreamingDataSource)
+                    // Stop (called by WebmStreamingSource to stop downloading a file via FileCache and
+                    // continue downloading it via WebmStreamingDataSource)
                 is FileDownloadResult.Stopped -> {
                     val (downloaded, total, output) = synchronized(activeDownloads) {
-                        val activeDownload =  activeDownloads.get(url)
+                        val activeDownload = activeDownloads.get(url)
 
                         val downloaded = activeDownload?.downloaded?.get()
                         val total = activeDownload?.total?.get()

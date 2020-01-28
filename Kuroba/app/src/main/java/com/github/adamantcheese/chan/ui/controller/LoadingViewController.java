@@ -5,7 +5,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.github.adamantcheese.chan.R;
-import com.github.adamantcheese.chan.utils.BackgroundUtils;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
@@ -15,6 +14,7 @@ public class LoadingViewController
     private TextView textView;
     private ProgressBar progressBar;
     private boolean indeterminate;
+    private boolean backNotAllowed = true;
 
     public LoadingViewController(Context context, boolean indeterminate) {
         super(context);
@@ -30,9 +30,16 @@ public class LoadingViewController
         progressBar = view.findViewById(R.id.progress_bar);
     }
 
-    // Disable the back button for this controller
+    public void enableBack() {
+        backNotAllowed = false;
+    }
+
+    // Disable the back button for this controller unless otherwise requested by the above
     @Override
     public boolean onBack() {
+        if (!backNotAllowed) {
+            presentedByController.onBack();
+        }
         return true;
     }
 
@@ -40,21 +47,13 @@ public class LoadingViewController
      * Shows a progress bar with percentage in the center (cannot be used with indeterminate)
      */
     public void updateProgress(int percent) {
-        BackgroundUtils.ensureMainThread();
-
         if (indeterminate) {
-            throw new IllegalStateException("Cannot be used with indeterminate flag");
+            return;
         }
 
-        if (textView.getVisibility() != VISIBLE && percent > 0) {
-            textView.setVisibility(VISIBLE);
-        }
-
-        if (progressBar.getVisibility() != VISIBLE) {
-            progressBar.setVisibility(VISIBLE);
-        }
-
-        textView.setText(String.valueOf(percent));
+        textView.setVisibility(VISIBLE);
+        progressBar.setVisibility(VISIBLE);
+        textView.setText(String.valueOf(percent > 0 ? percent : "0"));
     }
 
     /**
@@ -62,20 +61,12 @@ public class LoadingViewController
      * (cannot be used with indeterminate)
      */
     public void updateWithText(String text) {
-        BackgroundUtils.ensureMainThread();
-
         if (indeterminate) {
-            throw new IllegalStateException("Cannot be used with indeterminate flag");
+            return;
         }
 
-        if (textView.getVisibility() != VISIBLE) {
-            textView.setVisibility(VISIBLE);
-        }
-
-        if (progressBar.getVisibility() == VISIBLE) {
-            progressBar.setVisibility(GONE);
-        }
-
+        textView.setVisibility(VISIBLE);
+        progressBar.setVisibility(GONE);
         textView.setText(text);
     }
 

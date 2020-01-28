@@ -24,6 +24,7 @@ import com.github.adamantcheese.chan.core.cache.FileCacheV2;
 import com.github.adamantcheese.chan.core.cache.stream.WebmStreamingSource;
 import com.github.adamantcheese.chan.core.net.ProxiedHurlStack;
 import com.github.adamantcheese.chan.core.settings.ChanSettings;
+import com.github.adamantcheese.chan.core.site.SiteResolver;
 import com.github.adamantcheese.chan.core.site.http.HttpCallManager;
 import com.github.adamantcheese.chan.utils.Logger;
 import com.github.k1rakishou.fsaf.FileManager;
@@ -32,7 +33,6 @@ import com.github.k1rakishou.fsaf.file.RawFile;
 import org.codejargon.feather.Provides;
 
 import java.io.File;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -41,13 +41,10 @@ import okhttp3.OkHttpClient;
 
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getAppContext;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.getApplicationLabel;
-import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class NetModule {
     public static final String USER_AGENT = getApplicationLabel() + "/" + BuildConfig.VERSION_NAME;
-    public static final long DOWNLOADER_OKHTTP_TIMEOUT_SECONDS = 20L;
-    public static final long PROXIED_OKHTTP_TIMEOUT_SECONDS = 30L;
-    public static final long THREAD_SAVE_MANAGER_OKHTTP_TIMEOUT_SECONDS = 30L;
     public static final String THREAD_SAVE_MANAGER_OKHTTP_CLIENT_NAME = "thread_save_manager_okhttp_client";
     public static final String DOWNLOADER_OKHTTP_CLIENT_NAME = "downloader_okhttp_client";
     private static final String FILE_CACHE_DIR = "filecache";
@@ -71,12 +68,7 @@ public class NetModule {
         RawFile cacheDirFile = fileManager.fromRawFile(new File(cacheDir, FILE_CACHE_DIR));
         RawFile chunksCacheDirFile = fileManager.fromRawFile(new File(cacheDir, FILE_CHUNKS_CACHE_DIR));
 
-        return new CacheHandler(
-                fileManager,
-                cacheDirFile,
-                chunksCacheDirFile,
-                ChanSettings.autoLoadThreadImages.get()
-        );
+        return new CacheHandler(fileManager, cacheDirFile, chunksCacheDirFile, ChanSettings.autoLoadThreadImages.get());
     }
 
     @Provides
@@ -84,18 +76,17 @@ public class NetModule {
     public FileCacheV2 provideFileCacheV2(
             FileManager fileManager,
             CacheHandler cacheHandler,
+            SiteResolver siteResolver,
             @Named(DOWNLOADER_OKHTTP_CLIENT_NAME) OkHttpClient okHttpClient
     ) {
         Logger.d(AppModule.DI_TAG, "File cache V2");
-        return new FileCacheV2(fileManager, cacheHandler, okHttpClient);
+        return new FileCacheV2(fileManager, cacheHandler, siteResolver, okHttpClient);
     }
 
     @Provides
     @Singleton
     public WebmStreamingSource provideWebmStreamingSource(
-            FileManager fileManager,
-            FileCacheV2 fileCacheV2,
-            CacheHandler cacheHandler
+            FileManager fileManager, FileCacheV2 fileCacheV2, CacheHandler cacheHandler
     ) {
         Logger.d(AppModule.DI_TAG, "WebmStreamingSource");
         return new WebmStreamingSource(fileManager, fileCacheV2, cacheHandler);
@@ -119,7 +110,7 @@ public class NetModule {
 
     /**
      * This okHttpClient is for posting.
-     * */
+     */
     // TODO(FileCacheV2): make this @Named as well instead of using hacks
     @Provides
     @Singleton
@@ -130,23 +121,22 @@ public class NetModule {
 
     /**
      * This okHttpClient is for images/file/apk updates/ downloading, prefetching, etc.
-     * */
+     */
     @Provides
     @Singleton
     @Named(DOWNLOADER_OKHTTP_CLIENT_NAME)
     public OkHttpClient provideOkHttpClient() {
         Logger.d(AppModule.DI_TAG, "DownloaderOkHttp client");
 
-        return new OkHttpClient.Builder()
-                .connectTimeout(DOWNLOADER_OKHTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                .readTimeout(DOWNLOADER_OKHTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                .writeTimeout(DOWNLOADER_OKHTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        return new OkHttpClient.Builder().connectTimeout(30, SECONDS)
+                .readTimeout(30, SECONDS)
+                .writeTimeout(30, SECONDS)
                 .build();
     }
 
     /**
      * This okHttpClient is for local threads downloading.
-     * */
+     */
     @Provides
     @Singleton
     @Named(THREAD_SAVE_MANAGER_OKHTTP_CLIENT_NAME)
@@ -154,9 +144,9 @@ public class NetModule {
         Logger.d(AppModule.DI_TAG, "ThreadSaverOkHttp client");
 
         return new OkHttpClient().newBuilder()
-                .connectTimeout(THREAD_SAVE_MANAGER_OKHTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                .writeTimeout(THREAD_SAVE_MANAGER_OKHTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                .readTimeout(THREAD_SAVE_MANAGER_OKHTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .connectTimeout(30, SECONDS)
+                .writeTimeout(30, SECONDS)
+                .readTimeout(30, SECONDS)
                 .build();
     }
 
@@ -168,12 +158,11 @@ public class NetModule {
         public OkHttpClient getProxiedClient() {
             if (proxiedClient == null) {
 
+                // Proxies are usually slow, so they have increased timeouts
                 proxiedClient = newBuilder().proxy(ChanSettings.getProxy())
-                        // Proxies are usually slow, so they have increased timeouts
-                        .connectTimeout(PROXIED_OKHTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                        .readTimeout(PROXIED_OKHTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                        .writeTimeout(PROXIED_OKHTTP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                        .callTimeout(2, MINUTES)
+                        .connectTimeout(30, SECONDS)
+                        .readTimeout(30, SECONDS)
+                        .writeTimeout(30, SECONDS)
                         .build();
             }
             return proxiedClient;

@@ -19,7 +19,6 @@ package com.github.adamantcheese.chan.core.presenter;
 import android.annotation.SuppressLint;
 import android.media.AudioManager;
 
-import androidx.annotation.GuardedBy;
 import androidx.viewpager.widget.ViewPager;
 
 import com.github.adamantcheese.chan.core.cache.CacheHandler;
@@ -84,11 +83,7 @@ public class ImageViewerPresenter
     private int selectedPosition = 0;
     private SwipeDirection swipeDirection = SwipeDirection.Default;
     private Loadable loadable;
-
     private Set<CancelableDownload> preloadingImages = new HashSet<>();
-
-    // TODO: does it need to be synchronized?
-    @GuardedBy("itself")
     private final Set<String> nonCancelableImages = new HashSet<>();
 
     // Disables swiping until the view pager is visible
@@ -113,9 +108,7 @@ public class ImageViewerPresenter
         this.selectedPosition = Math.max(0, Math.min(images.size() - 1, position));
         this.progress = new HashMap<>(images.size());
 
-        int chunksCount = ChanSettings.ConcurrentFileDownloadingChunks.toChunkCount(
-                ChanSettings.concurrentFileDownloadingChunksCount.get()
-        );
+        int chunksCount = ChanSettings.concurrentDownloadChunkCount.get().toInt();
 
         for (int i = 0; i < images.size(); ++i) {
             List<Float> initialProgress = new ArrayList<>(chunksCount);
@@ -169,10 +162,7 @@ public class ImageViewerPresenter
             preloadingImage.cancel();
         }
 
-        synchronized (nonCancelableImages) {
-            nonCancelableImages.clear();
-        }
-
+        nonCancelableImages.clear();
         preloadingImages.clear();
     }
 
@@ -270,10 +260,8 @@ public class ImageViewerPresenter
             callback.setImageMode(other, LOWRES, false);
         }
 
-        synchronized (nonCancelableImages) {
-            nonCancelableImages.clear();
-            nonCancelableImages.addAll(getNonCancelableImages(position));
-        }
+        nonCancelableImages.clear();
+        nonCancelableImages.addAll(getNonCancelableImages(position));
 
         if (swipeDirection == SwipeDirection.Forward) {
             cancelPreviousFromStartImageDownload(position);
@@ -304,10 +292,27 @@ public class ImageViewerPresenter
             }
         }
 
+        ChanSettings.ImageClickPreloadStrategy strategy = ChanSettings.imageClickPreloadStrategy.get();
+
         if (swipeDirection == SwipeDirection.Forward) {
             preloadNext();
         } else if (swipeDirection == SwipeDirection.Backward) {
             preloadPrevious();
+        } else {
+            switch (strategy) {
+                case PreloadNext:
+                    preloadNext();
+                    break;
+                case PreloadPrevious:
+                    preloadPrevious();
+                    break;
+                case PreloadBoth:
+                    preloadNext();
+                    preloadPrevious();
+                    break;
+                case PreloadNeither:
+                    break;
+            }
         }
     }
 
@@ -389,26 +394,17 @@ public class ImageViewerPresenter
                 }
             };
 
-
             if (loadChunked) {
-                DownloadRequestExtraInfo extraInfo = new DownloadRequestExtraInfo(
-                        postImage.size,
-                        postImage.fileHash
-                );
+                DownloadRequestExtraInfo extraInfo = new DownloadRequestExtraInfo(postImage.size, postImage.fileHash);
 
-                preloadDownload[0] = fileCacheV2.enqueueChunkedDownloadFileRequest(
-                        loadable,
+                preloadDownload[0] = fileCacheV2.enqueueChunkedDownloadFileRequest(loadable,
                         postImage,
                         extraInfo,
                         fileCacheListener
                 );
             } else {
-                preloadDownload[0] = fileCacheV2.enqueueNormalDownloadFileRequest(
-                        loadable,
-                        postImage,
-                        false,
-                        fileCacheListener
-                );
+                preloadDownload[0] =
+                        fileCacheV2.enqueueNormalDownloadFileRequest(loadable, postImage, false, fileCacheListener);
             }
 
             if (preloadDownload[0] != null) {
@@ -440,14 +436,9 @@ public class ImageViewerPresenter
     }
 
     private boolean cancelImageDownload(int position, CancelableDownload downloader) {
-        synchronized (nonCancelableImages) {
-            if (nonCancelableImages.contains(downloader.getUrl())) {
-                Logger.d(TAG,
-                        "Attempt to cancel non cancelable download for image with url: "
-                                + downloader.getUrl()
-                );
-                return false;
-            }
+        if (nonCancelableImages.contains(downloader.getUrl())) {
+            Logger.d(TAG, "Attempt to cancel non cancelable download for image with url: " + downloader.getUrl());
+            return false;
         }
 
         PostImage previousImage = images.get(position);
@@ -511,8 +502,8 @@ public class ImageViewerPresenter
         BackgroundUtils.ensureMainThread();
 
         if (chunksCount <= 0) {
-            throw new IllegalArgumentException("chunksCount must be 1 or greater than 1 " +
-                    "(actual = " + chunksCount + ")");
+            throw new IllegalArgumentException(
+                    "chunksCount must be 1 or greater than 1 " + "(actual = " + chunksCount + ")");
         }
 
         List<Float> initialProgress = new ArrayList<>(chunksCount);
@@ -572,8 +563,7 @@ public class ImageViewerPresenter
             }
         }
 
-        if (multiImageView.getPostImage() == images.get(selectedPosition)
-                && progress.get(selectedPosition) != null) {
+        if (multiImageView.getPostImage() == images.get(selectedPosition) && progress.get(selectedPosition) != null) {
             callback.showProgress(true);
             callback.onLoadProgress(progress.get(selectedPosition));
         }

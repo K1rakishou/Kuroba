@@ -18,7 +18,6 @@ package com.github.adamantcheese.chan.core.site.parser;
 
 import android.graphics.Typeface;
 import android.text.SpannableString;
-import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.style.StyleSpan;
@@ -35,10 +34,8 @@ import com.github.adamantcheese.chan.ui.layout.ArchivesLayout;
 import com.github.adamantcheese.chan.ui.text.AbsoluteSizeSpanHashed;
 import com.github.adamantcheese.chan.ui.text.ForegroundColorSpanHashed;
 import com.github.adamantcheese.chan.ui.theme.Theme;
-import com.github.adamantcheese.chan.utils.Logger;
 
 import org.jsoup.nodes.Element;
-import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 
 import java.io.UnsupportedEncodingException;
@@ -46,30 +43,20 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.inject.Inject;
-
-import static com.github.adamantcheese.chan.Chan.inject;
 import static com.github.adamantcheese.chan.Chan.instance;
 import static com.github.adamantcheese.chan.core.site.parser.StyleRule.tagRule;
 import static com.github.adamantcheese.chan.utils.AndroidUtils.sp;
 
 @AnyThread
 public class CommentParser {
-    private static final String TAG = "CommentParser";
-
     private static final String SAVED_REPLY_SELF_SUFFIX = " (Me)";
     private static final String SAVED_REPLY_OTHER_SUFFIX = " (You)";
     private static final String OP_REPLY_SUFFIX = " (OP)";
-    private static final String MOCK_REPLY_SUFFIX = " (MOCK)";
     private static final String EXTERN_THREAD_LINK_SUFFIX = " \u2192"; // arrow to the right
-
-    @Inject
-    MockReplyManager mockReplyManager;
 
     private Pattern fullQuotePattern = Pattern.compile("/(\\w+)/\\w+/(\\d+)#p(\\d+)");
     private Pattern quotePattern = Pattern.compile(".*#p(\\d+)");
@@ -77,13 +64,10 @@ public class CommentParser {
     private Pattern boardLinkPattern8Chan = Pattern.compile("/(.*?)/index.html");
     private Pattern boardSearchPattern = Pattern.compile("//boards\\.4chan.*?\\.org/(.*?)/catalog#s=(.*)");
     private Pattern colorPattern = Pattern.compile("color:#([0-9a-fA-F]+)");
-    private Pattern crossBoardDeadLink = Pattern.compile(">>>/\\w+/(\\d+)");
 
     private Map<String, List<StyleRule>> rules = new HashMap<>();
 
     public CommentParser() {
-        inject(this);
-
         // Required tags.
         rule(tagRule("p"));
         rule(tagRule("div"));
@@ -163,8 +147,6 @@ public class CommentParser {
         CommentParser.Link handlerLink = matchAnchor(post, text, anchor, callback);
 
         if (handlerLink != null) {
-            SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
-
             if (handlerLink.type == PostLinkable.Type.THREAD) {
                 handlerLink.key = TextUtils.concat(handlerLink.key, EXTERN_THREAD_LINK_SUFFIX);
             }
@@ -172,13 +154,6 @@ public class CommentParser {
             if (handlerLink.type == PostLinkable.Type.QUOTE) {
                 int postNo = (int) handlerLink.value;
                 post.addReplyTo(postNo);
-
-                if (mockReplyManager.hasMockReply()) {
-                    MockReplyManager.MockReply mockReply = mockReplyManager.getMockReply();
-                    if (mockReply != null) {
-                        addMockReply(theme, post, spannableStringBuilder, postNo, mockReply);
-                    }
-                }
 
                 // Append (OP) when it's a reply to OP
                 if (postNo == post.opId) {
@@ -199,59 +174,10 @@ public class CommentParser {
             PostLinkable pl = new PostLinkable(theme, handlerLink.key, handlerLink.value, handlerLink.type);
             res.setSpan(pl, 0, res.length(), (250 << Spanned.SPAN_PRIORITY_SHIFT) & Spanned.SPAN_PRIORITY);
             post.addLinkable(pl);
-            spannableStringBuilder.append(res);
 
-            return spannableStringBuilder;
+            return res;
         } else {
             return null;
-        }
-    }
-
-    private void addMockReply(
-            Theme theme,
-            Post.Builder post,
-            SpannableStringBuilder spannableStringBuilder,
-            int postNo,
-            MockReplyManager.MockReply mockReply
-    ) {
-        int siteId = post.board.siteId;
-        String code = post.board.code;
-        int opNo = post.opId;
-
-        // The post we are about to add a new reply to must be from the same site, board
-        // and thread as the post it will be replying to. Basically, both posts must be
-        // in the same thread.
-        if (mockReply.isSuitablePost(siteId, code, opNo)) {
-            Logger.d(TAG, "Adding a new mock reply " +
-                    "(replyTo: " + mockReply.getPostNo() + ", replyFrom: " + postNo + ")");
-            post.addReplyTo(mockReply.getPostNo());
-
-            CharSequence replyText = String.format(
-                    Locale.US,
-                    ">>%d%s",
-                    mockReply.getPostNo(),
-                    MOCK_REPLY_SUFFIX
-            );
-
-            SpannableString res = new SpannableString(replyText);
-
-            PostLinkable pl = new PostLinkable(
-                    theme,
-                    replyText,
-                    mockReply.getPostNo(),
-                    PostLinkable.Type.QUOTE
-            );
-
-            res.setSpan(
-                    pl,
-                    0,
-                    res.length(),
-                    (250 << Spanned.SPAN_PRIORITY_SHIFT) & Spanned.SPAN_PRIORITY
-            );
-
-            post.addLinkable(pl);
-            spannableStringBuilder.append(res);
-            spannableStringBuilder.append('\n');
         }
     }
 
@@ -315,54 +241,24 @@ public class CommentParser {
     public CharSequence handleDead(
             Theme theme, PostParser.Callback callback, Post.Builder builder, CharSequence text, Element deadlink
     ) {
-        // html looks like <span class="deadlink">&gt;&gt;number</span>
-        // Or like this &gt;&gt;&gt;/int/116000000 in case of a dead crossboard link
-
-        String deadlinkText = deadlink.text();
-        int postNo = -1;
-
+        //crossboard thread links in the OP are likely not thread links, so just let them error out on the parseInt
         try {
-            // Handle the crossboard dead link first, because otherwise the condition will be always
-            // true. The order of conditions matters!
-            if (deadlinkText.startsWith(">>>")) {
-                Matcher matcher = crossBoardDeadLink.matcher(deadlinkText);
-                if (matcher.matches()) {
-                    postNo = Integer.parseInt(matcher.group(1));
-                }
-            } else if (deadlinkText.startsWith(">>")) {
-                postNo = Integer.parseInt(Parser.unescapeEntities(deadlinkText, true).substring(2));
-            } else {
-                Logger.e(TAG, "Unknown format of a dead link, deadlinkText = " + deadlinkText);
+            int postNo = Integer.parseInt(deadlink.text().substring(2));
+            List<ArchivesLayout.PairForAdapter> boards = instance(ArchivesManager.class).domainsForBoard(builder.board);
+            if (!boards.isEmpty() && builder.op) {
+                //only allow same board deadlinks to be parsed in the OP, as they are likely previous thread links
+                //if a deadlink appears in a regular post that is likely to be a dead post link, we are unable to link to an archive
+                //as there are no URLs that directly will allow you to link to a post and be redirected to the right thread
+                Site site = builder.board.site;
+                String link =
+                        site.resolvable().desktopUrl(Loadable.forThread(site, builder.board, postNo, ""), builder.id);
+                link = link.replace("https://boards.4chan.org/", "https://" + boards.get(0).second + "/");
+                PostLinkable newLinkable = new PostLinkable(theme, link, link, PostLinkable.Type.LINK);
+                text = span(text, newLinkable);
+                builder.addLinkable(newLinkable);
             }
-        } catch (Throwable error) {
-            Logger.e(TAG, "Couldn't parse postNo for a dead link, deadlinkText = " + deadlinkText);
+        } catch (Exception ignored) {
         }
-
-        List<ArchivesLayout.PairForAdapter> boards = instance(ArchivesManager.class).domainsForBoard(builder.board);
-        if (postNo >= 0 && !boards.isEmpty() && builder.op) {
-            //only allow deadlinks to be parsed in the OP, as they are likely previous thread links
-            //if a deadlink appears in a regular post that is likely to be a dead post link, we are unable to link to an archive
-            //as there are no URLs that directly will allow you to link to a post and be redirected to the right thread
-            Site site = builder.board.site;
-
-            String link =
-                    site.resolvable().desktopUrlForPost(
-                            Loadable.forThread(site, builder.board, postNo, ""),
-                            builder.id
-                    );
-
-            link = link.replace("https://boards.4chan.org/", "https://" + boards.get(0).second + "/");
-            PostLinkable newLinkable = new PostLinkable(theme, link, link, PostLinkable.Type.LINK);
-            text = span(text, newLinkable);
-            builder.addLinkable(newLinkable);
-        } else {
-            Logger.e(TAG, "Couldn't process dead link, " +
-                    "deadlinkText = " + deadlinkText + ", " +
-                    "postNo = " + postNo + ", " +
-                    "boards.isEmpty() = " + boards.isEmpty() + ", " +
-                    "op = " + builder.op);
-        }
-
         return text;
     }
 

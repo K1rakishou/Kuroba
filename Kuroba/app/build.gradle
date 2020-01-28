@@ -9,7 +9,7 @@ android {
     // don't forget to also update travis.yml config
     // !!! IMPORTANT !!!
 
-    compileSdkVersion 29
+    compileSdkVersion 28
 
     def getCommitHash = { ->
         def stdout = new ByteArrayOutputStream()
@@ -22,7 +22,7 @@ android {
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 29
+        targetSdkVersion 28
 
         /**
          * ------------------------------------------------------------
@@ -258,7 +258,7 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxjava:2.2.12'
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'com.github.K1rakishou:Fuck-Storage-Access-Framework:v1.0-alpha20'
+    implementation 'com.github.K1rakishou:Fuck-Storage-Access-Framework:v1.0-alpha21'
     implementation 'joda-time:joda-time:2.10.5'
 
     testImplementation 'junit:junit:4.13'
