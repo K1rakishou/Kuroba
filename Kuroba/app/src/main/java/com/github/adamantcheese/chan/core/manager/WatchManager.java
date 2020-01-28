@@ -729,8 +729,6 @@ public class WatchManager
     }
 
     private boolean updatePinWatchers() {
-        boolean hasAtLeastOneActivePin = false;
-        boolean hasAtLeastOnePinWithUnreadPosts = false;
         List<Pin> pinsToUpdateInDatabase = new ArrayList<>();
 
         for (Pin pin : pins) {
@@ -804,20 +802,6 @@ public class WatchManager
                     if (pin.quoteLastCount != pin.quoteNewCount) {
                         hasAtLeastOnePinWithUnreadPosts = true;
                     }
-                }
-            }
-
-            if (ChanSettings.watchNotifyMode.get().equals(NOTIFY_ALL_POSTS)) {
-                // This check is here so we can stop the foreground service when the user has read
-                // every post in every active pin.
-                if (pin.watchLastCount != pin.watchNewCount || pin.quoteLastCount != pin.quoteNewCount) {
-                    hasAtLeastOnePinWithUnreadPosts = true;
-                }
-            } else if (ChanSettings.watchNotifyMode.get().equals(NOTIFY_ONLY_QUOTES)) {
-                // Only check for quotes in case of the watchNotifyMode setting being set to
-                // only quotes
-                if (pin.quoteLastCount != pin.quoteNewCount) {
-                    hasAtLeastOnePinWithUnreadPosts = true;
                 }
             }
 
