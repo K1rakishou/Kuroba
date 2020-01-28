@@ -488,12 +488,12 @@ public class ImageViewerPresenter
     }
 
     @Override
-    public void onSwipeTop() {
+    public void onSwipeToCloseImage() {
         onExit();
     }
 
     @Override
-    public void onSwipeBottom() {
+    public void onSwipeToSaveImage() {
         callback.saveImage();
     }
 
